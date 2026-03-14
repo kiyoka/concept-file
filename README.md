@@ -194,6 +194,42 @@ Results show that `Order` (purchase relationship) and `AuthService` (authenticat
 - **Onboarding** — Understand project structure at a glance
 - **Deduplication** — Detect redundant or near-duplicate code
 
+## Example: Wikipedia Concept Visualization
+
+The `examples/wikipedia/` directory demonstrates visualizing semantic relationships between concepts using Wikipedia article introductions.
+
+### Dataset
+
+5 categories × 5 words = 25 concepts in both English and Japanese (50 total):
+
+| Category | Words |
+|----------|-------|
+| Animals | Dog/イヌ, Cat/ネコ, Elephant/ゾウ, Whale/クジラ, Eagle/ワシ |
+| Musical instruments | Piano/ピアノ, Guitar/ギター, Violin/ヴァイオリン, Drum/ドラム, Flute/フルート |
+| Celestial bodies | Sun/太陽, Moon/月, Mars/火星, Jupiter/木星, Galaxy/銀河 |
+| Food | Sushi/寿司, Pasta/パスタ, Curry/カレー, Bread/パン, Chocolate/チョコレート |
+| Programming languages | Python, JavaScript, Rust, Go, Haskell |
+
+Data source: Wikipedia (CC BY-SA 3.0)
+
+### Generating .concept files
+
+```bash
+# English
+bash examples/wikipedia/fetch.sh
+
+# Japanese
+bash examples/wikipedia/fetch-ja.sh
+```
+
+### 3D visualization
+
+```bash
+cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
+```
+
+Since the embedding model (text-embedding-3-small) supports multiple languages, the English and Japanese versions of the same concept (e.g., "Dog" and "イヌ") are placed close together. Clear clusters also form by category.
+
 ## Project Structure
 
 ```
@@ -211,8 +247,12 @@ concept-file/
 │   ├── concept-dist         — Distance calculation
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization
 └── examples/
-    └── java-project/
-        ├── src/             — Sample Java source files
+    ├── java-project/
+    │   ├── src/             — Sample Java source files
+    │   └── concepts/        — Generated .concept files
+    └── wikipedia/
+        ├── fetch.sh         — English Wikipedia data fetcher
+        ├── fetch-ja.sh      — Japanese Wikipedia data fetcher
         └── concepts/        — Generated .concept files
 ```
 

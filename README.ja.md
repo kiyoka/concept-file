@@ -195,6 +195,42 @@ cli/concept-dist examples/java-project/concepts/User.concept examples/java-proje
 - **オンボーディング** — プロジェクト構造の俯瞰的な理解
 - **重複検出** — 冗長または類似したコードの検出
 
+## 実行例: Wikipedia概念の可視化
+
+`examples/wikipedia/` ディレクトリは、Wikipedia記事の冒頭文を使って概念の意味的な関係を可視化するデモです。
+
+### データセット
+
+5カテゴリ × 5語 = 25概念を英語・日本語の両方で取得（計50概念）:
+
+| カテゴリ | 単語 |
+|---------|------|
+| 動物 | Dog/イヌ, Cat/ネコ, Elephant/ゾウ, Whale/クジラ, Eagle/ワシ |
+| 楽器 | Piano/ピアノ, Guitar/ギター, Violin/ヴァイオリン, Drum/ドラム, Flute/フルート |
+| 天体 | Sun/太陽, Moon/月, Mars/火星, Jupiter/木星, Galaxy/銀河 |
+| 食べ物 | Sushi/寿司, Pasta/パスタ, Curry/カレー, Bread/パン, Chocolate/チョコレート |
+| プログラミング言語 | Python, JavaScript, Rust, Go, Haskell |
+
+データソース: Wikipedia（CC BY-SA 3.0）
+
+### .concept ファイルの生成
+
+```bash
+# 英語版
+bash examples/wikipedia/fetch.sh
+
+# 日本語版
+bash examples/wikipedia/fetch-ja.sh
+```
+
+### 3D可視化
+
+```bash
+cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
+```
+
+embeddingモデル（text-embedding-3-small）は多言語対応のため、同じ概念の英語版と日本語版（例: 「Dog」と「イヌ」）が近くに配置されます。また、カテゴリごとに明確なクラスタが形成されることが確認できます。
+
 ## プロジェクト構成
 
 ```
@@ -213,8 +249,12 @@ concept-file/
 │   ├── concept-dist         — 距離計算
 │   └── concept-plot         — UMAP 2D 散布図で可視化
 └── examples/
-    └── java-project/
-        ├── src/             — サンプル Java ソースファイル
+    ├── java-project/
+    │   ├── src/             — サンプル Java ソースファイル
+    │   └── concepts/        — 生成された .concept ファイル
+    └── wikipedia/
+        ├── fetch.sh         — 英語版 Wikipedia データ取得
+        ├── fetch-ja.sh      — 日本語版 Wikipedia データ取得
         └── concepts/        — 生成された .concept ファイル
 ```
 
