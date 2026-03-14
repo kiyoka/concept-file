@@ -120,6 +120,37 @@ cli/concept-dist query.concept targets/*.concept
 
 Distance 0 = identical, 1 = completely unrelated.
 
+### concept-plot
+
+Visualize `.concept` embeddings as an interactive scatter plot (2D/3D) using UMAP dimensionality reduction. Output is an HTML file.
+
+```bash
+# Basic 2D plot
+cli/concept-plot concepts/*.concept
+
+# 3D scatter plot
+cli/concept-plot --3d concepts/*.concept
+
+# Pipe from find
+find . -name '*.concept' | cli/concept-plot
+
+# Specify output file
+cli/concept-plot concepts/*.concept -o my_plot.html
+```
+
+Options:
+- `-o, --output` — Output HTML file path (default: `concept_plot.html`)
+- `--3d` — Generate a 3D scatter plot (default is 2D)
+- `--n-neighbors` — UMAP n_neighbors parameter (default: 15)
+- `--min-dist` — UMAP min_dist parameter (default: 0.1)
+- `--seed` — Random seed for reproducibility (default: 42)
+
+Requires additional dependencies:
+
+```bash
+pip install umap-learn plotly numpy
+```
+
 ## Example: Java Project Similarity
 
 The `examples/java-project/` directory demonstrates a practical use case — finding similar classes in a Java codebase.
@@ -177,7 +208,8 @@ concept-file/
 ├── cli/
 │   ├── concept-embed        — Text → .concept generation
 │   ├── concept-show         — Human-readable display
-│   └── concept-dist         — Distance calculation
+│   ├── concept-dist         — Distance calculation
+│   └── concept-plot         — UMAP 2D/3D scatter plot visualization
 └── examples/
     └── java-project/
         ├── src/             — Sample Java source files

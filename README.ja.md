@@ -120,6 +120,38 @@ cli/concept-dist query.concept targets/*.concept
 
 距離 0 = 同一、1 = 完全に無関係。
 
+### concept-plot
+
+`.concept` ファイルの埋め込みベクトルをUMAPで次元削減し、インタラクティブな散布図（2D/3D）として可視化します。出力はHTMLファイルです。
+
+```bash
+# 引数で指定（2D）
+cli/concept-plot concepts/*.concept
+
+# 3D 散布図を生成
+cli/concept-plot --3d concepts/*.concept
+
+# 標準入力から（find との組み合わせ）
+find . -name '*.concept' | cli/concept-plot
+
+# 出力ファイルを指定
+cli/concept-plot concepts/*.concept -o my_plot.html
+```
+
+オプション:
+- `-o, --output` — 出力HTMLファイルパス（デフォルト: `concept_plot.html`）
+- `--3d` — 3D散布図を生成（デフォルトは2D）
+- `--n-neighbors` — UMAP の n_neighbors パラメータ（デフォルト: 15）
+- `--min-dist` — UMAP の min_dist パラメータ（デフォルト: 0.1）
+- `--seed` — 再現性のための乱数シード（デフォルト: 42）
+
+追加の依存パッケージが必要です:
+
+```bash
+pip install umap-learn plotly numpy
+```
+
+
 ## 実行例: Javaプロジェクトの類似度分析
 
 `examples/java-project/` ディレクトリは実用的なユースケースを示しています — Javaコードベースで類似するクラスを見つけます。
@@ -178,7 +210,8 @@ concept-file/
 ├── cli/
 │   ├── concept-embed        — テキスト → .concept 生成
 │   ├── concept-show         — 人間が読める形式で表示
-│   └── concept-dist         — 距離計算
+│   ├── concept-dist         — 距離計算
+│   └── concept-plot         — UMAP 2D 散布図で可視化
 └── examples/
     └── java-project/
         ├── src/             — サンプル Java ソースファイル
