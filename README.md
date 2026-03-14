@@ -187,6 +187,8 @@ cli/concept-dist examples/java-project/concepts/User.concept examples/java-proje
 
 Results show that `Order` (purchase relationship) and `AuthService` (authentication relationship) are closest to `User`, which matches the actual domain relationships in the code.
 
+3D plot: [java_plot_3d.html](examples/java-project/java_plot_3d.html) (open locally in your browser)
+
 ### Use cases
 
 - **Refactoring** — Find classes with overlapping responsibilities
@@ -229,6 +231,8 @@ cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedi
 ```
 
 Since the embedding model (text-embedding-3-small) supports multiple languages, the English and Japanese versions of the same concept (e.g., "Dog" and "イヌ") are placed close together. Clear clusters also form by category.
+
+3D plot: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html) (open locally in your browser)
 
 ## Project Structure
 

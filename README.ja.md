@@ -188,6 +188,8 @@ cli/concept-dist examples/java-project/concepts/User.concept examples/java-proje
 
 結果は `Order`（購入関係）と `AuthService`（認証関係）が `User` に最も近いことを示しており、コード上の実際のドメイン関係と一致しています。
 
+3Dプロット: [java_plot_3d.html](examples/java-project/java_plot_3d.html)（ローカルでブラウザで開いてください）
+
 ### ユースケース
 
 - **リファクタリング** — 責務が重複しているクラスの発見
@@ -230,6 +232,8 @@ cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedi
 ```
 
 embeddingモデル（text-embedding-3-small）は多言語対応のため、同じ概念の英語版と日本語版（例: 「Dog」と「イヌ」）が近くに配置されます。また、カテゴリごとに明確なクラスタが形成されることが確認できます。
+
+3Dプロット: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html)（ローカルでブラウザで開いてください）
 
 ## プロジェクト構成
 
