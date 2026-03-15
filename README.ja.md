@@ -103,22 +103,68 @@ package com.example.shop.model;
 
 ### concept-search
 
-自然言語のクエリテキストで `.concept` ファイルをセマンティック検索します。クエリを埋め込みベクトルに変換し、ターゲットとのコサイン類似度でランキングします。
+自然言語のクエリテキストで `.concept` ファイルをセマンティック検索します。デフォルト出力はファイルパスのみ（Unix フレンドリー）。
 
 ```bash
-# Safari関連のissueを検索
-cli/concept-search "iOS Safari browser bug" examples/vuejs-issues/concepts/*.concept
+# .concept ファイルを検索
+concept-search "iOS Safari browser bug" concepts/*.concept
+
+# スコア表示
+concept-search -s "TypeScript型エラー" concepts/*.concept
 
 # 上位5件のみ表示
-cli/concept-search "TypeScript型エラー" -n 5 concepts/*.concept
-
-# スコア0.6以上のみ表示
-cli/concept-search "hydration problem" --threshold 0.6 concepts/*.concept
+concept-search -n 5 "hydration problem" concepts/*.concept
 ```
 
 オプション:
-- `-n, --top` — 表示件数（デフォルト: 10）
-- `--threshold` — 最低類似度スコア（デフォルト: 0.0）
+- `-s, --score` — 類似度スコアを表示
+- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
+- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
+- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
+- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
+
+### concept-grep
+
+セマンティック grep — ソースファイルを意味で検索します。ソースツリーをミラーした `.concept/` ディレクトリをインデックスとして使用します。
+
+```bash
+# まずソースファイルをインデックス化
+concept-grep --index -r src/
+
+# 意味で検索（出力はファイルパスのみ）
+concept-grep "ユーザー認証" src/*.java
+
+# 再帰検索
+concept-grep -r "決済処理" src/
+
+# スコア表示
+concept-grep -s "サーバーへのデータ送信" src/*.java
+
+# パイプと組み合わせ
+concept-grep -r "エラーハンドリング" src/ | xargs cat
+```
+
+インデックス構造:
+```text
+.concept/
+├── src/
+│   ├── main.java.concept
+│   ├── client.java.concept
+│   └── util/
+│       └── util.java.concept
+src/
+├── main.java
+├── client.java
+└── util/
+    └── util.java
+```
+
+オプション:
+- `-r, --recursive` — ディレクトリを再帰的に検索
+- `-s, --score` — 類似度スコアを表示
+- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
+- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
+- `--index` — 指定したソースファイルの `.concept` ファイルを生成
 - `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
 - `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
 
@@ -346,10 +392,11 @@ concept-file/
 │       └── search.py        — コサイン類似度/距離
 ├── cli/
 │   ├── concept-embed        — テキスト → .concept 生成
-│   ├── concept-search       — 自然言語でセマンティック検索
+│   ├── concept-search       — .concept ファイルのセマンティック検索
+│   ├── concept-grep         — ソースファイルのセマンティック grep
 │   ├── concept-show         — 人間が読める形式で表示
 │   ├── concept-dist         — 距離計算
-│   └── concept-plot         — UMAP 2D 散布図で可視化
+│   └── concept-plot         — UMAP 2D/3D 散布図で可視化
 └── examples/
     ├── java-project/
     │   ├── src/             — サンプル Java ソースファイル
