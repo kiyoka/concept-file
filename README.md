@@ -253,7 +253,15 @@ cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedi
 
 Since the embedding model (text-embedding-3-small) supports multiple languages, the English and Japanese versions of the same concept (e.g., "Dog" and "イヌ") are placed close together. Clear clusters also form by category.
 
-3D plot: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html) (open locally in your browser)
+2D plot:
+
+![Wikipedia Concept Embedding Map (2D)](img/wikipedia_plot_2d.png)
+
+3D plot:
+
+![Wikipedia Concept Embedding Map (3D)](img/wikipedia_plot_3d.png)
+
+Interactive HTML: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html) (open locally in your browser)
 
 ## Example: GitHub Issue Semantic Search
 
