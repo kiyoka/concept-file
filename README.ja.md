@@ -140,8 +140,19 @@ concept-grep -r "決済処理" src/
 # スコア表示
 concept-grep -s "サーバーへのデータ送信" src/*.java
 
+# 全ファイルのマッチ/非マッチ状態を表示
+concept-grep -v "サーバーへのデータ送信" src/*.java
+
 # パイプと組み合わせ
 concept-grep -r "エラーハンドリング" src/ | xargs cat
+```
+
+`-v` の出力例:
+```
+  MATCH	0.690 (>0.50)	src/AuthService.java
+  MATCH	0.605 (>0.50)	src/User.java
+       	0.489 (>0.50)	src/Product.java
+       	0.432 (>0.50)	src/Order.java
 ```
 
 インデックス構造:
@@ -160,8 +171,9 @@ src/
 ```
 
 オプション:
-- `-r, --recursive` — ディレクトリを再帰的に検索
+- `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
 - `-s, --score` — 類似度スコアを表示
+- `-v, --verbose` — 全ファイルのスコアと閾値を表示（マッチ/非マッチ両方）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
 - `--threshold` — 最低類似度スコア（デフォルト: 0.5）
 - `--index` — 指定したソースファイルの `.concept` ファイルを生成
