@@ -1,5 +1,7 @@
 # Concept File Format Specification
 
+[日本語版](SPEC.ja.md)
+
 **Version:** 0.1.0 (Draft)
 **Status:** Draft
 **Extension:** `.concept`

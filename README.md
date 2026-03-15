@@ -1,5 +1,7 @@
 # concept-file
 
+[日本語版](README.ja.md)
+
 Portable semantic search without a vector database. Just files, `find`, and `sort`.
 
 ## What is this?
