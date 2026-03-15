@@ -109,6 +109,38 @@ def main():
         hover = f"<b>{name}</b><br>{fp}<br><br>{text}"
         hover_texts.append(hover)
 
+    # Compute colors from UMAP coordinates so nearby points share similar colors.
+    # For 3D: normalize (x, y, z) to [0, 1] and map to RGB.
+    # For 2D: use angle from centroid for hue, distance for saturation.
+    def coords_to_colors(coords):
+        import colorsys
+        if coords.shape[1] == 3:
+            mins = coords.min(axis=0)
+            maxs = coords.max(axis=0)
+            ranges = maxs - mins
+            ranges[ranges == 0] = 1.0
+            normed = (coords - mins) / ranges
+            colors = [
+                f"rgb({int(r*255)},{int(g*255)},{int(b*255)})"
+                for r, g, b in normed
+            ]
+        else:
+            cx, cy = coords[:, 0].mean(), coords[:, 1].mean()
+            dx = coords[:, 0] - cx
+            dy = coords[:, 1] - cy
+            angles = np.arctan2(dy, dx)
+            hues = (angles + np.pi) / (2 * np.pi)  # [0, 1]
+            dists = np.sqrt(dx**2 + dy**2)
+            max_dist = dists.max() if dists.max() > 0 else 1.0
+            sats = 0.4 + 0.6 * (dists / max_dist)  # [0.4, 1.0]
+            colors = []
+            for h, s in zip(hues, sats):
+                r, g, b = colorsys.hls_to_rgb(h, 0.5, s)
+                colors.append(f"rgb({int(r*255)},{int(g*255)},{int(b*255)})")
+        return colors
+
+    point_colors = coords_to_colors(coords)
+
     if args.three_d:
         fig = go.Figure(data=go.Scatter3d(
             x=coords[:, 0],
@@ -119,7 +151,7 @@ def main():
             textfont=dict(size=9),
             hovertext=hover_texts,
             hoverinfo="text",
-            marker=dict(size=5, color="steelblue", opacity=0.8),
+            marker=dict(size=5, color=point_colors, opacity=0.8),
         ))
         fig.update_layout(
             title="Concept Embedding Map (3D)",
@@ -143,7 +175,7 @@ def main():
             textfont=dict(size=11),
             hovertext=hover_texts,
             hoverinfo="text",
-            marker=dict(size=10, color="steelblue", opacity=0.8),
+            marker=dict(size=10, color=point_colors, opacity=0.8),
         ))
         fig.update_layout(
             title="Concept Embedding Map",
