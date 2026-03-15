@@ -46,11 +46,57 @@ See [SPEC.md](SPEC.md) for the full specification.
 
 ## Setup
 
+### Installation
+
 ```bash
+git clone https://github.com/kiyoka/concept-file.git
+cd concept-file
 python -m venv .venv
 source .venv/bin/activate
 pip install openai
+```
+
+Add the `cli/` directory to your PATH:
+
+```bash
+export PATH="$PWD/cli:$PATH"
+```
+
+You can add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) to make it permanent.
+
+### Using OpenAI API
+
+```bash
 export OPENAI_API_KEY="sk-..."
+```
+
+### Using a Local LLM (LM Studio)
+
+You can use a local embedding model via [LM Studio](https://lmstudio.ai/) instead of the OpenAI API. No API key required.
+
+1. Install and launch LM Studio
+2. Download an embedding model (e.g. `granite-embedding-278m-multilingual`)
+3. Go to the **Developer** tab and load the model
+4. The local API server runs at `http://localhost:1234/v1`
+
+Set the environment variables:
+
+```bash
+export CONCEPT_API_BASE="http://localhost:1234/v1"
+export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"
+```
+
+Then use the CLI tools as usual — they will automatically use the local model:
+
+```bash
+concept-embed --name "My Concept" --text "Some text" -o output.concept
+```
+
+You can also specify these per-command:
+
+```bash
+concept-embed --api-base http://localhost:1234/v1 --model granite-embedding-278m-multilingual \
+  --name "My Concept" --text "Some text" -o output.concept
 ```
 
 ## CLI Tools
