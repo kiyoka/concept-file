@@ -2,8 +2,13 @@
 """Visualize .concept embeddings as an interactive 2D/3D scatter plot using UMAP."""
 
 import argparse
+import os
 import sys
+import tempfile
 from pathlib import Path
+
+# Use a per-process numba cache directory to avoid lock conflicts in parallel execution
+os.environ["NUMBA_CACHE_DIR"] = os.path.join(tempfile.gettempdir(), f"numba_cache_{os.getpid()}")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 
