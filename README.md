@@ -101,6 +101,27 @@ package com.example.shop.model;
 
 Use `--json` to output the raw JSON body.
 
+### concept-search
+
+Semantic search over `.concept` files using a natural language query. The query text is converted to an embedding vector and ranked by cosine similarity against targets.
+
+```bash
+# Search for Safari-related issues
+cli/concept-search "iOS Safari browser bug" examples/vuejs-issues/concepts/*.concept
+
+# Show top 5 results only
+cli/concept-search "TypeScript type error" -n 5 concepts/*.concept
+
+# Show only results with score >= 0.6
+cli/concept-search "hydration problem" --threshold 0.6 concepts/*.concept
+```
+
+Options:
+- `-n, --top` — Number of results to show (default: 10)
+- `--threshold` — Minimum similarity score (default: 0.0)
+- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
+- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
+
 ### concept-dist
 
 Calculate cosine distance from a query `.concept` file to one or more targets. Results are sorted by distance (closest first).
@@ -234,6 +255,55 @@ Since the embedding model (text-embedding-3-small) supports multiple languages, 
 
 3D plot: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html) (open locally in your browser)
 
+## Example: GitHub Issue Semantic Search
+
+The `examples/vuejs-issues/` directory demonstrates semantic search over real-world GitHub issues from the [vuejs/core](https://github.com/vuejs/core) repository.
+
+### Dataset
+
+643 open issues from the vuejs/core repository, each converted to a `.concept` file. The title and body of each issue are combined and embedded.
+
+### Semantic search
+
+"Are there any iOS/Safari-specific bug reports?"
+
+```bash
+cli/concept-search "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
+```
+
+```
+0.6989  vuejs/core#4680: Safari loads image twice...    issue-4680.concept
+0.6888  vuejs/core#6240: SFC Playground <style> v-bind does not work in safari ipad...  issue-6240.concept
+0.6774  vuejs/core#8086: Change event not firing in Safari  issue-8086.concept
+...
+```
+
+### Automatic clustering
+
+K-means (k=10) clustering reveals meaningful groups based on issue content:
+
+| Cluster | Count | Theme |
+|---------|-------|-------|
+| 0 | 75 | TypeScript type definitions — defineProps, generics |
+| 1 | 68 | Lifecycle / Suspense / KeepAlive |
+| 2 | 65 | Feature requests / Vapor |
+| 3 | 76 | v-model / forms / DOM |
+| 4 | 65 | Types / compiler |
+| 5 | 58 | CSS / styles / Teleport |
+| 6 | 75 | Reactivity / ref / watch |
+| 7 | 36 | Slots |
+| 8 | 93 | General bugs / errors |
+| 9 | 32 | Transition / TransitionGroup |
+
+3D plot: [vuejs_issues_plot_3d.html](examples/vuejs-issues/vuejs_issues_plot_3d.html) (open locally in your browser)
+
+### Use cases
+
+- **Duplicate detection** — Find existing issues similar to a new report
+- **Triage** — Auto-classify unlabeled issues
+- **Trend analysis** — Track the rise/fall of specific themes
+- **Impact analysis** — Review related issues together
+
 ## Project Structure
 
 ```
@@ -247,6 +317,7 @@ concept-file/
 │       └── search.py        — Cosine similarity/distance
 ├── cli/
 │   ├── concept-embed        — Text → .concept generation
+│   ├── concept-search       — Natural language semantic search
 │   ├── concept-show         — Human-readable display
 │   ├── concept-dist         — Distance calculation
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization
@@ -254,10 +325,12 @@ concept-file/
     ├── java-project/
     │   ├── src/             — Sample Java source files
     │   └── concepts/        — Generated .concept files
-    └── wikipedia/
-        ├── fetch.sh         — English Wikipedia data fetcher
-        ├── fetch-ja.sh      — Japanese Wikipedia data fetcher
-        └── concepts/        — Generated .concept files
+    ├── wikipedia/
+    │   ├── fetch.sh         — English Wikipedia data fetcher
+    │   ├── fetch-ja.sh      — Japanese Wikipedia data fetcher
+    │   └── concepts/        — Generated .concept files
+    └── vuejs-issues/
+        └── concepts/        — vuejs/core GitHub issues
 ```
 
 ## License
