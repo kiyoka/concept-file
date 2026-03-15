@@ -261,7 +261,7 @@ The `examples/vuejs-issues/` directory demonstrates semantic search over real-wo
 
 ### Dataset
 
-643 open issues from the vuejs/core repository, each converted to a `.concept` file. The title and body of each issue are combined and embedded.
+240 open issues (from 2024 onwards) from the vuejs/core repository, each converted to a `.concept` file. The title and body of each issue are combined and embedded.
 
 ### Semantic search
 
@@ -272,28 +272,26 @@ cli/concept-search "iOS Safari browser specific bug" examples/vuejs-issues/conce
 ```
 
 ```
-0.6989  vuejs/core#4680: Safari loads image twice...    issue-4680.concept
-0.6888  vuejs/core#6240: SFC Playground <style> v-bind does not work in safari ipad...  issue-6240.concept
-0.6774  vuejs/core#8086: Change event not firing in Safari  issue-8086.concept
+0.6697  vuejs/core#13553: Accessibility bug with VoiceOver involving slots and form fields  issue-13553.concept
+0.6082  vuejs/core#12404: `:global(A) B` incorrectly compiles to just `A`  issue-12404.concept
+0.6012  vuejs/core#12789: Wrong type for vue custom element  issue-12789.concept
 ...
 ```
 
 ### Automatic clustering
 
-K-means (k=10) clustering reveals meaningful groups based on issue content:
+K-means (k=8) clustering reveals meaningful groups based on issue content:
 
 | Cluster | Count | Theme |
 |---------|-------|-------|
-| 0 | 75 | TypeScript type definitions — defineProps, generics |
-| 1 | 68 | Lifecycle / Suspense / KeepAlive |
-| 2 | 65 | Feature requests / Vapor |
-| 3 | 76 | v-model / forms / DOM |
-| 4 | 65 | Types / compiler |
-| 5 | 58 | CSS / styles / Teleport |
-| 6 | 75 | Reactivity / ref / watch |
-| 7 | 36 | Slots |
-| 8 | 93 | General bugs / errors |
-| 9 | 32 | Transition / TransitionGroup |
+| 0 | 22 | TypeScript types / SFC |
+| 1 | 28 | SSR / compiler |
+| 2 | 43 | Types / language-tools |
+| 3 | 35 | Custom elements / Slots |
+| 4 | 34 | v-model / defineModel |
+| 5 | 38 | Lifecycle / Reactivity |
+| 6 | 17 | Transition / Suspense |
+| 7 | 23 | Type inference / ref |
 
 3D plot: [vuejs_issues_plot_3d.html](examples/vuejs-issues/vuejs_issues_plot_3d.html) (open locally in your browser)
 
