@@ -233,7 +233,15 @@ cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedi
 
 embeddingモデル（text-embedding-3-small）は多言語対応のため、同じ概念の英語版と日本語版（例: 「Dog」と「イヌ」）が近くに配置されます。また、カテゴリごとに明確なクラスタが形成されることが確認できます。
 
-3Dプロット: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html)（ローカルでブラウザで開いてください）
+2Dプロット:
+
+![Wikipedia Concept Embedding Map (2D)](img/wikipedia_plot_2d.png)
+
+3Dプロット:
+
+![Wikipedia Concept Embedding Map (3D)](img/wikipedia_plot_3d.png)
+
+インタラクティブHTML: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html)（ローカルでブラウザで開いてください）
 
 ## プロジェクト構成
 
