@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""Semantic search over .concept files using a natural language query."""
+
+import argparse
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
+
+from concept_file import read_concept
+from concept_file.search import cosine_similarity
+
+
+def embed_query(text, model, api_base=None):
+    """Generate embedding for query text."""
+    import openai
+    kwargs = {}
+    if api_base:
+        kwargs["base_url"] = api_base
+        kwargs["api_key"] = "lm-studio"
+    client = openai.OpenAI(**kwargs)
+    response = client.embeddings.create(input=text, model=model)
+    return response.data[0].embedding
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Semantic search over .concept files using natural language query"
+    )
+    parser.add_argument("query", help="Search query text")
+    parser.add_argument("targets", nargs="+", help="Target .concept file(s)")
+    parser.add_argument("-n", "--top", type=int, default=10,
+                        help="Number of results to show (default: 10)")
+    parser.add_argument("--model",
+                        default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
+                        help="Embedding model (env: CONCEPT_EMBED_MODEL)")
+    parser.add_argument("--api-base",
+                        default=os.environ.get("CONCEPT_API_BASE"),
+                        help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
+    parser.add_argument("--threshold", type=float, default=0.0,
+                        help="Minimum similarity score to show (default: 0.0)")
+    args = parser.parse_args()
+
+    try:
+        query_vec = embed_query(args.query, args.model, api_base=args.api_base)
+    except Exception as e:
+        print(f"Error generating query embedding: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    results = []
+    for target_path in args.targets:
+        try:
+            data = read_concept(target_path)
+            target_vec = data.get("embedding", {}).get("vector")
+            if not target_vec:
+                continue
+            sim = cosine_similarity(query_vec, target_vec)
+            results.append((sim, target_path, data.get("concept", "")))
+        except (ValueError, FileNotFoundError) as e:
+            print(f"Warning: {target_path}: {e}", file=sys.stderr)
+
+    results.sort(key=lambda x: x[0], reverse=True)
+
+    shown = 0
+    for sim, path, name in results:
+        if sim < args.threshold:
+            break
+        if shown >= args.top:
+            break
+        print(f"{sim:.4f}\t{name}\t{path}")
+        shown += 1
+
+    if not results:
+        print("No results found.", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

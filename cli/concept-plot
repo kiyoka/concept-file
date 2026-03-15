@@ -2,8 +2,13 @@
 """Visualize .concept embeddings as an interactive 2D/3D scatter plot using UMAP."""
 
 import argparse
+import os
 import sys
+import tempfile
 from pathlib import Path
+
+# Use a per-process numba cache directory to avoid lock conflicts in parallel execution
+os.environ["NUMBA_CACHE_DIR"] = os.path.join(tempfile.gettempdir(), f"numba_cache_{os.getpid()}")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 
@@ -15,9 +20,10 @@ from concept_file import read_concept
 
 
 def load_concepts(paths):
-    """Load .concept files from a list of paths. Return (names, texts, embeddings, paths)."""
+    """Load .concept files from a list of paths. Return (names, texts, full_texts, embeddings, paths)."""
     names = []
     texts = []
+    full_texts = []
     embeddings = []
     file_paths = []
     for p in paths:
@@ -32,6 +38,7 @@ def load_concepts(paths):
                 continue
             names.append(data.get("concept", Path(p).stem))
             text = data.get("text", "")
+            full_texts.append(text)
             if len(text) > 200:
                 text = text[:200] + "..."
             texts.append(text)
@@ -39,7 +46,7 @@ def load_concepts(paths):
             file_paths.append(p)
         except (ValueError, FileNotFoundError) as e:
             print(f"Warning: {p}: {e}", file=sys.stderr)
-    return names, texts, np.array(embeddings), file_paths
+    return names, texts, full_texts, np.array(embeddings), file_paths
 
 
 def main():
@@ -83,7 +90,7 @@ def main():
         print("       find . -name '*.concept' | concept-plot", file=sys.stderr)
         sys.exit(1)
 
-    names, texts, embeddings, file_paths = load_concepts(paths)
+    names, texts, full_texts, embeddings, file_paths = load_concepts(paths)
 
     if len(names) < 2:
         print("Error: need at least 2 .concept files with embeddings", file=sys.stderr)
@@ -99,6 +106,7 @@ def main():
         n_components=n_components,
         n_neighbors=n_neighbors,
         min_dist=args.min_dist,
+        n_epochs=50,
         random_state=args.seed,
     )
     coords = reducer.fit_transform(embeddings)
@@ -187,7 +195,76 @@ def main():
             height=700,
         )
 
-    fig.write_html(args.output)
+    # Write HTML with search functionality
+    plot_html = fig.to_html(include_plotlyjs=True, full_html=True)
+
+    # Inject search UI and JavaScript before closing </body>
+    search_js = """
+<div id="search-container" style="position:fixed;top:10px;left:10px;z-index:1000;background:white;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-family:sans-serif;">
+  <input id="search-input" type="text" placeholder="Search concepts..." style="width:250px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;">
+  <span id="search-count" style="margin-left:8px;color:#666;font-size:12px;"></span>
+  <button id="search-clear" onclick="clearSearch()" style="margin-left:4px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#f5f5f5;cursor:pointer;font-size:12px;">Clear</button>
+</div>
+<script>
+(function() {
+  var names = NAMES_JSON;
+  var fullTexts = TEXTS_JSON;
+  var plotDiv = document.getElementsByClassName('plotly-graph-div')[0];
+
+  function doSearch() {
+    var query = document.getElementById('search-input').value.toLowerCase().trim();
+    var countEl = document.getElementById('search-count');
+    if (!query) {
+      clearSearch();
+      return;
+    }
+    var sizes = [];
+    var opacities = [];
+    var matchCount = 0;
+    for (var i = 0; i < names.length; i++) {
+      if (names[i].toLowerCase().indexOf(query) !== -1 || fullTexts[i].toLowerCase().indexOf(query) !== -1) {
+        sizes.push(MATCH_SIZE);
+        opacities.push(1.0);
+        matchCount++;
+      } else {
+        sizes.push(DIM_SIZE);
+        opacities.push(0.15);
+      }
+    }
+    Plotly.restyle(plotDiv, {'marker.size': [sizes], 'marker.opacity': [opacities]}, [0]);
+    countEl.textContent = matchCount + ' / ' + names.length;
+  }
+
+  window.clearSearch = function() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-count').textContent = '';
+    var sizes = new Array(names.length).fill(DEFAULT_SIZE);
+    var opacities = new Array(names.length).fill(0.8);
+    Plotly.restyle(plotDiv, {'marker.size': [sizes], 'marker.opacity': [opacities]}, [0]);
+  };
+
+  document.getElementById('search-input').addEventListener('input', doSearch);
+})();
+</script>
+"""
+    # Set marker sizes based on 2D/3D
+    if args.three_d:
+        search_js = search_js.replace("MATCH_SIZE", "12").replace("DIM_SIZE", "3").replace("DEFAULT_SIZE", "5")
+    else:
+        search_js = search_js.replace("MATCH_SIZE", "18").replace("DIM_SIZE", "5").replace("DEFAULT_SIZE", "10")
+
+    import json
+    import base64
+    # Encode as base64 to avoid </script> and other HTML-breaking characters in JSON
+    names_b64 = base64.b64encode(json.dumps(names, ensure_ascii=False).encode("utf-8")).decode("ascii")
+    texts_b64 = base64.b64encode(json.dumps(full_texts, ensure_ascii=False).encode("utf-8")).decode("ascii")
+    search_js = search_js.replace("NAMES_JSON", f"JSON.parse(atob('{names_b64}'))")
+    search_js = search_js.replace("TEXTS_JSON", f"JSON.parse(atob('{texts_b64}'))")
+
+    plot_html = plot_html.replace("</body>", search_js + "</body>")
+
+    with open(args.output, "w", encoding="utf-8") as f:
+        f.write(plot_html)
     print(f"Plot saved to {args.output}", file=sys.stderr)
 
 

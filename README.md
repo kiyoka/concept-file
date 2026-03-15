@@ -101,6 +101,27 @@ package com.example.shop.model;
 
 Use `--json` to output the raw JSON body.
 
+### concept-search
+
+Semantic search over `.concept` files using a natural language query. The query text is converted to an embedding vector and ranked by cosine similarity against targets.
+
+```bash
+# Search for Safari-related issues
+cli/concept-search "iOS Safari browser bug" examples/vuejs-issues/concepts/*.concept
+
+# Show top 5 results only
+cli/concept-search "TypeScript type error" -n 5 concepts/*.concept
+
+# Show only results with score >= 0.6
+cli/concept-search "hydration problem" --threshold 0.6 concepts/*.concept
+```
+
+Options:
+- `-n, --top` — Number of results to show (default: 10)
+- `--threshold` — Minimum similarity score (default: 0.0)
+- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
+- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
+
 ### concept-dist
 
 Calculate cosine distance from a query `.concept` file to one or more targets. Results are sorted by distance (closest first).
@@ -234,6 +255,53 @@ Since the embedding model (text-embedding-3-small) supports multiple languages, 
 
 3D plot: [wikipedia_plot_3d.html](examples/wikipedia/wikipedia_plot_3d.html) (open locally in your browser)
 
+## Example: GitHub Issue Semantic Search
+
+The `examples/vuejs-issues/` directory demonstrates semantic search over real-world GitHub issues from the [vuejs/core](https://github.com/vuejs/core) repository.
+
+### Dataset
+
+240 open issues (from 2024 onwards) from the vuejs/core repository, each converted to a `.concept` file. The title and body of each issue are combined and embedded.
+
+### Semantic search
+
+"Are there any iOS/Safari-specific bug reports?"
+
+```bash
+cli/concept-search "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
+```
+
+```
+0.6697  vuejs/core#13553: Accessibility bug with VoiceOver involving slots and form fields  issue-13553.concept
+0.6082  vuejs/core#12404: `:global(A) B` incorrectly compiles to just `A`  issue-12404.concept
+0.6012  vuejs/core#12789: Wrong type for vue custom element  issue-12789.concept
+...
+```
+
+### Automatic clustering
+
+K-means (k=8) clustering reveals meaningful groups based on issue content:
+
+| Cluster | Count | Theme |
+|---------|-------|-------|
+| 0 | 22 | TypeScript types / SFC |
+| 1 | 28 | SSR / compiler |
+| 2 | 43 | Types / language-tools |
+| 3 | 35 | Custom elements / Slots |
+| 4 | 34 | v-model / defineModel |
+| 5 | 38 | Lifecycle / Reactivity |
+| 6 | 17 | Transition / Suspense |
+| 7 | 23 | Type inference / ref |
+
+3D plot: [vuejs_issues_plot_3d.html](examples/vuejs-issues/vuejs_issues_plot_3d.html) (open locally in your browser)
+
+### Use cases
+
+- **Duplicate detection** — Find existing issues similar to a new report
+- **Triage** — Auto-classify unlabeled issues
+- **Trend analysis** — Track the rise/fall of specific themes
+- **Impact analysis** — Review related issues together
+
 ## Project Structure
 
 ```
@@ -247,6 +315,7 @@ concept-file/
 │       └── search.py        — Cosine similarity/distance
 ├── cli/
 │   ├── concept-embed        — Text → .concept generation
+│   ├── concept-search       — Natural language semantic search
 │   ├── concept-show         — Human-readable display
 │   ├── concept-dist         — Distance calculation
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization
@@ -254,10 +323,12 @@ concept-file/
     ├── java-project/
     │   ├── src/             — Sample Java source files
     │   └── concepts/        — Generated .concept files
-    └── wikipedia/
-        ├── fetch.sh         — English Wikipedia data fetcher
-        ├── fetch-ja.sh      — Japanese Wikipedia data fetcher
-        └── concepts/        — Generated .concept files
+    ├── wikipedia/
+    │   ├── fetch.sh         — English Wikipedia data fetcher
+    │   ├── fetch-ja.sh      — Japanese Wikipedia data fetcher
+    │   └── concepts/        — Generated .concept files
+    └── vuejs-issues/
+        └── concepts/        — vuejs/core GitHub issues
 ```
 
 ## License

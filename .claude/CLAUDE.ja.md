@@ -15,6 +15,7 @@ concept-file/
 │       └── search.py      ← コサイン類似度検索
 └── cli/
     ├── concept-embed      ← テキスト → .concept生成
+    ├── concept-search     ← 自然言語でセマンティック検索
     ├── concept-dist       ← 距離計算
     ├── concept-show       ← 中身を人間が読める形で表示
     └── concept-plot       ← UMAPで可視化
@@ -42,3 +43,11 @@ concept-file/
 2. Python参照実装（read/write/search）
 3. concept CLI
 ```
+
+並列で3dプロットなどをしたとき、時間がかかりすぎるのは、キャッシュの保存場所が衝突するなどの不具合があるのでは？
+
+2.の対策を入れてください。
+
+はい
+
+コミットしてください。
