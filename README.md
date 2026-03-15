@@ -151,22 +151,80 @@ Use `--json` to output the raw JSON body.
 
 ### concept-search
 
-Semantic search over `.concept` files using a natural language query. The query text is converted to an embedding vector and ranked by cosine similarity against targets.
+Semantic search over `.concept` files using a natural language query. Output is file paths only by default (Unix-friendly).
 
 ```bash
-# Search for Safari-related issues
-cli/concept-search "iOS Safari browser bug" examples/vuejs-issues/concepts/*.concept
+# Search .concept files
+concept-search "iOS Safari browser bug" concepts/*.concept
 
-# Show top 5 results only
-cli/concept-search "TypeScript type error" -n 5 concepts/*.concept
+# Show scores
+concept-search -s "TypeScript type error" concepts/*.concept
 
-# Show only results with score >= 0.6
-cli/concept-search "hydration problem" --threshold 0.6 concepts/*.concept
+# Top 5 results only
+concept-search -n 5 "hydration problem" concepts/*.concept
 ```
 
 Options:
-- `-n, --top` — Number of results to show (default: 10)
-- `--threshold` — Minimum similarity score (default: 0.0)
+- `-s, --score` — Show similarity scores
+- `-n, --top` — Show only top N results (default: all)
+- `--threshold` — Minimum similarity score (default: 0.5)
+- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
+- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
+
+### concept-grep
+
+Semantic grep — find source files by meaning. Uses a `.concept/` directory as an index that mirrors your source tree structure.
+
+```bash
+# Index source files first
+concept-grep --index -r src/
+
+# Search by meaning (output is file paths only)
+concept-grep "user authentication" src/*.java
+
+# Recursive search
+concept-grep -r "payment processing" src/
+
+# Show scores
+concept-grep -s "data transmission to the server" src/*.java
+
+# Show all files with match/unmatch status
+concept-grep -v "data transmission to the server" src/*.java
+
+# Pipe-friendly
+concept-grep -r "error handling" src/ | xargs cat
+```
+
+`-v` output example:
+```
+  MATCH	0.690 (>0.50)	src/AuthService.java
+  MATCH	0.605 (>0.50)	src/User.java
+       	0.489 (>0.50)	src/Product.java
+       	0.432 (>0.50)	src/Order.java
+```
+
+Index structure:
+```text
+.concept/
+├── src/
+│   ├── main.java.concept
+│   ├── client.java.concept
+│   └── util/
+│       └── util.java.concept
+src/
+├── main.java
+├── client.java
+└── util/
+    └── util.java
+```
+
+Options:
+- `-r, --recursive` — Recurse into directories (skips `.git/`, `.concept/`, `.venv/`, `node_modules/`)
+- `-s, --score` — Show similarity scores
+- `-v, --verbose` — Show all files with scores and threshold (matched and unmatched)
+- `-n, --top` — Show only top N results (default: all)
+- `--threshold` — Minimum similarity score (default: 0.5)
+- `--index` — Generate `.concept` files for the specified source files
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
 
@@ -371,7 +429,8 @@ concept-file/
 │       └── search.py        — Cosine similarity/distance
 ├── cli/
 │   ├── concept-embed        — Text → .concept generation
-│   ├── concept-search       — Natural language semantic search
+│   ├── concept-search       — Semantic search over .concept files
+│   ├── concept-grep         — Semantic grep over source files
 │   ├── concept-show         — Human-readable display
 │   ├── concept-dist         — Distance calculation
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization

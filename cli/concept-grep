@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""Semantic grep — find source files by meaning using .concept index."""
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
+
+from concept_file import read_concept
+from concept_file.search import cosine_similarity
+
+
+def find_concept_root(start=None):
+    """Find .concept/ directory by walking up from start (default: cwd)."""
+    p = Path(start) if start else Path.cwd()
+    p = p.resolve()
+    while True:
+        candidate = p / ".concept"
+        if candidate.is_dir():
+            return candidate
+        if p.parent == p:
+            break
+        p = p.parent
+    return None
+
+
+def source_to_concept_path(concept_root, source_path):
+    """Map a source file path to its .concept file path."""
+    # source_path relative to the project root (parent of .concept/)
+    project_root = concept_root.parent
+    try:
+        rel = Path(source_path).resolve().relative_to(project_root)
+    except ValueError:
+        return None
+    return concept_root / (str(rel) + ".concept")
+
+
+def concept_to_source_path(concept_root, concept_path):
+    """Map a .concept file path back to its source file path."""
+    project_root = concept_root.parent
+    try:
+        rel = Path(concept_path).relative_to(concept_root)
+    except ValueError:
+        return None
+    # Remove .concept suffix
+    source_rel = str(rel)
+    if source_rel.endswith(".concept"):
+        source_rel = source_rel[: -len(".concept")]
+    return project_root / source_rel
+
+
+def collect_source_files(paths, recursive):
+    """Collect source file paths from arguments, expanding directories if recursive."""
+    SKIP_DIRS = {".git", ".concept", ".venv", "__pycache__", "node_modules"}
+
+    def walk_recursive(directory):
+        """Walk directory tree, skipping hidden and common non-source directories."""
+        result = []
+        for entry in sorted(directory.iterdir()):
+            if entry.name.startswith(".") or entry.name in SKIP_DIRS:
+                continue
+            if entry.is_file():
+                result.append(entry)
+            elif entry.is_dir():
+                result.extend(walk_recursive(entry))
+        return result
+
+    files = []
+    for p in paths:
+        path = Path(p)
+        if path.is_file():
+            files.append(path)
+        elif path.is_dir():
+            if recursive:
+                files.extend(walk_recursive(path))
+            else:
+                print(
+                    f"concept-grep: {p}: Is a directory (use -r to recurse)",
+                    file=sys.stderr,
+                )
+    return files
+
+
+def embed_query(text, model, api_base=None):
+    """Generate embedding for query text."""
+    import openai
+
+    kwargs = {}
+    if api_base:
+        kwargs["base_url"] = api_base
+        kwargs["api_key"] = "lm-studio"
+    client = openai.OpenAI(**kwargs)
+    response = client.embeddings.create(input=text, model=model)
+    return response.data[0].embedding
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Semantic grep — find source files by meaning"
+    )
+    parser.add_argument("query", nargs="?", help="Search query text (not required with --index)")
+    parser.add_argument("paths", nargs="*", help="Files or directories to search")
+    parser.add_argument("-r", "--recursive", action="store_true",
+                        help="Recurse into directories")
+    parser.add_argument("-s", "--score", action="store_true",
+                        help="Show similarity scores")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Show all files with scores and threshold (matched and unmatched)")
+    parser.add_argument("-n", "--top", type=int, default=0,
+                        help="Show only top N results (default: all)")
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="Minimum similarity score (default: 0.5)")
+    parser.add_argument("--model",
+                        default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
+                        help="Embedding model (env: CONCEPT_EMBED_MODEL)")
+    parser.add_argument("--api-base",
+                        default=os.environ.get("CONCEPT_API_BASE"),
+                        help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
+    parser.add_argument("--index", action="store_true",
+                        help="Generate .concept files for the specified source files")
+    args = parser.parse_args()
+
+    concept_root = find_concept_root()
+
+    # --index mode: generate .concept files
+    if args.index:
+        # In index mode, query is not needed — treat it as part of paths
+        index_paths = []
+        if args.query:
+            index_paths.append(args.query)
+        index_paths.extend(args.paths)
+        if not index_paths:
+            index_paths = ["."]
+
+        if not concept_root:
+            concept_root = Path.cwd() / ".concept"
+            concept_root.mkdir(exist_ok=True)
+            print(f"Created {concept_root}", file=sys.stderr)
+
+        source_files = collect_source_files(index_paths, args.recursive)
+        if not source_files:
+            print("No source files found.", file=sys.stderr)
+            sys.exit(1)
+
+        from concept_file import write_concept
+        from datetime import datetime, timezone
+
+        count = 0
+        for sf in source_files:
+            concept_path = source_to_concept_path(concept_root, sf)
+            if not concept_path:
+                continue
+            concept_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                text = sf.read_text(errors="replace")
+                if not text.strip():
+                    continue
+                vector = embed_query(text, args.model, api_base=args.api_base)
+                data = {
+                    "concept": sf.name,
+                    "version": "1.0",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "text": text,
+                    "embedding": {
+                        "model": args.model,
+                        "dim": len(vector),
+                        "vector": vector,
+                    },
+                    "provenance": {
+                        "source_file": str(sf),
+                        "pipeline": "concept-grep --index",
+                    },
+                }
+                write_concept(str(concept_path), data)
+                count += 1
+                print(f"Indexed: {sf}", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: {sf}: {e}", file=sys.stderr)
+        print(f"Indexed {count} files.", file=sys.stderr)
+        return
+
+    # Search mode
+    if not args.query:
+        print("Error: query text is required for search mode.", file=sys.stderr)
+        sys.exit(1)
+
+    if not concept_root:
+        print("Error: .concept/ directory not found.", file=sys.stderr)
+        print("Run 'concept-grep --index -r *' to generate the index first.", file=sys.stderr)
+        sys.exit(1)
+
+    search_paths = args.paths if args.paths else ["."]
+    source_files = collect_source_files(search_paths, args.recursive)
+    if not source_files:
+        print("No source files found.", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        query_vec = embed_query(args.query, args.model, api_base=args.api_base)
+    except Exception as e:
+        print(f"Error generating query embedding: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    matched = []
+    unmatched = []
+    for sf in source_files:
+        concept_path = source_to_concept_path(concept_root, sf)
+        if not concept_path or not concept_path.exists():
+            continue
+        try:
+            data = read_concept(str(concept_path))
+            target_vec = data.get("embedding", {}).get("vector")
+            if not target_vec:
+                continue
+            sim = cosine_similarity(query_vec, target_vec)
+            if sim >= args.threshold:
+                matched.append((sim, sf))
+            else:
+                unmatched.append((sim, sf))
+        except (ValueError, FileNotFoundError) as e:
+            print(f"Warning: {concept_path}: {e}", file=sys.stderr)
+
+    matched.sort(key=lambda x: x[0], reverse=True)
+    unmatched.sort(key=lambda x: x[0], reverse=True)
+
+    if args.top > 0:
+        matched = matched[: args.top]
+
+    if args.verbose:
+        for sim, sf in matched:
+            print(f"  MATCH\t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+        for sim, sf in unmatched:
+            print(f"       \t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+    else:
+        for sim, sf in matched:
+            if args.score:
+                print(f"{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+            else:
+                print(sf)
+
+
+if __name__ == "__main__":
+    main()

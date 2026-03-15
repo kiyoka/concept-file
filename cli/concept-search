@@ -4,7 +4,6 @@
 import argparse
 import os
 import sys
-import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
@@ -31,16 +30,18 @@ def main():
     )
     parser.add_argument("query", help="Search query text")
     parser.add_argument("targets", nargs="+", help="Target .concept file(s)")
-    parser.add_argument("-n", "--top", type=int, default=10,
-                        help="Number of results to show (default: 10)")
+    parser.add_argument("-s", "--score", action="store_true",
+                        help="Show similarity scores")
+    parser.add_argument("-n", "--top", type=int, default=0,
+                        help="Show only top N results (default: all)")
     parser.add_argument("--model",
                         default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
                         help="Embedding model (env: CONCEPT_EMBED_MODEL)")
     parser.add_argument("--api-base",
                         default=os.environ.get("CONCEPT_API_BASE"),
                         help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
-    parser.add_argument("--threshold", type=float, default=0.0,
-                        help="Minimum similarity score to show (default: 0.0)")
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="Minimum similarity score (default: 0.5)")
     args = parser.parse_args()
 
     try:
@@ -63,18 +64,21 @@ def main():
 
     results.sort(key=lambda x: x[0], reverse=True)
 
-    shown = 0
-    for sim, path, name in results:
-        if sim < args.threshold:
-            break
-        if shown >= args.top:
-            break
-        print(f"{sim:.4f}\t{name}\t{path}")
-        shown += 1
+    # Filter by threshold
+    results = [(sim, path, name) for sim, path, name in results if sim >= args.threshold]
+
+    if args.top > 0:
+        results = results[: args.top]
 
     if not results:
         print("No results found.", file=sys.stderr)
         sys.exit(1)
+
+    for sim, path, name in results:
+        if args.score:
+            print(f"{sim:.3f} (>{args.threshold:.2f})\t{path}")
+        else:
+            print(path)
 
 
 if __name__ == "__main__":
