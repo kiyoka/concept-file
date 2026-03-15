@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Display the contents of a .concept file in human-readable form."""
+
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
+
+from concept_file import read_concept
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Show contents of a .concept file")
+    parser.add_argument("file", help="Path to .concept file")
+    parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    args = parser.parse_args()
+
+    try:
+        data = read_concept(args.file)
+    except (ValueError, FileNotFoundError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        import json
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return
+
+    print(f"Concept:  {data.get('concept', '(unnamed)')}")
+    print(f"Version:  {data.get('version', '?')}")
+    print(f"Created:  {data.get('created_at', '?')}")
+
+    if "language" in data:
+        print(f"Language: {data['language']}")
+
+    if "keywords" in data:
+        print(f"Keywords: {', '.join(data['keywords'])}")
+
+    if "summary" in data:
+        print(f"Summary:  {data['summary']}")
+
+    if "embedding" in data:
+        emb = data["embedding"]
+        dim = emb.get("dim", len(emb.get("vector", [])))
+        model = emb.get("model", "?")
+        print(f"Embedding: {dim}-dim ({model})")
+
+    if "provenance" in data:
+        prov = data["provenance"]
+        if "source_url" in prov:
+            print(f"Source:   {prov['source_url']}")
+        if "pipeline" in prov:
+            print(f"Pipeline: {prov['pipeline']}")
+        if "llm_model" in prov:
+            print(f"LLM:      {prov['llm_model']}")
+
+    if "relations" in data:
+        print("Relations:")
+        for rel in data["relations"]:
+            print(f"  {rel['type']:>10} -> {rel['ref']}")
+
+    print()
+    text = data.get("text", "")
+    if text:
+        print("--- Text ---")
+        print(text)
+
+
+if __name__ == "__main__":
+    main()
