@@ -53,6 +53,20 @@ def concept_to_source_path(concept_root, concept_path):
 
 def collect_source_files(paths, recursive):
     """Collect source file paths from arguments, expanding directories if recursive."""
+    SKIP_DIRS = {".git", ".concept", ".venv", "__pycache__", "node_modules"}
+
+    def walk_recursive(directory):
+        """Walk directory tree, skipping hidden and common non-source directories."""
+        result = []
+        for entry in sorted(directory.iterdir()):
+            if entry.name.startswith(".") or entry.name in SKIP_DIRS:
+                continue
+            if entry.is_file():
+                result.append(entry)
+            elif entry.is_dir():
+                result.extend(walk_recursive(entry))
+        return result
+
     files = []
     for p in paths:
         path = Path(p)
@@ -60,9 +74,7 @@ def collect_source_files(paths, recursive):
             files.append(path)
         elif path.is_dir():
             if recursive:
-                for f in sorted(path.rglob("*")):
-                    if f.is_file() and not f.name.startswith("."):
-                        files.append(f)
+                files.extend(walk_recursive(path))
             else:
                 print(
                     f"concept-grep: {p}: Is a directory (use -r to recurse)",
@@ -88,12 +100,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Semantic grep — find source files by meaning"
     )
-    parser.add_argument("query", help="Search query text")
-    parser.add_argument("paths", nargs="*", default=["."], help="Files or directories to search")
+    parser.add_argument("query", nargs="?", help="Search query text (not required with --index)")
+    parser.add_argument("paths", nargs="*", help="Files or directories to search")
     parser.add_argument("-r", "--recursive", action="store_true",
                         help="Recurse into directories")
     parser.add_argument("-s", "--score", action="store_true",
                         help="Show similarity scores")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Show all files with scores and threshold (matched and unmatched)")
     parser.add_argument("-n", "--top", type=int, default=0,
                         help="Show only top N results (default: all)")
     parser.add_argument("--threshold", type=float, default=0.5,
@@ -112,12 +126,20 @@ def main():
 
     # --index mode: generate .concept files
     if args.index:
+        # In index mode, query is not needed — treat it as part of paths
+        index_paths = []
+        if args.query:
+            index_paths.append(args.query)
+        index_paths.extend(args.paths)
+        if not index_paths:
+            index_paths = ["."]
+
         if not concept_root:
             concept_root = Path.cwd() / ".concept"
             concept_root.mkdir(exist_ok=True)
             print(f"Created {concept_root}", file=sys.stderr)
 
-        source_files = collect_source_files(args.paths, args.recursive)
+        source_files = collect_source_files(index_paths, args.recursive)
         if not source_files:
             print("No source files found.", file=sys.stderr)
             sys.exit(1)
@@ -160,12 +182,17 @@ def main():
         return
 
     # Search mode
+    if not args.query:
+        print("Error: query text is required for search mode.", file=sys.stderr)
+        sys.exit(1)
+
     if not concept_root:
         print("Error: .concept/ directory not found.", file=sys.stderr)
         print("Run 'concept-grep --index -r *' to generate the index first.", file=sys.stderr)
         sys.exit(1)
 
-    source_files = collect_source_files(args.paths, args.recursive)
+    search_paths = args.paths if args.paths else ["."]
+    source_files = collect_source_files(search_paths, args.recursive)
     if not source_files:
         print("No source files found.", file=sys.stderr)
         sys.exit(1)
@@ -176,7 +203,8 @@ def main():
         print(f"Error generating query embedding: {e}", file=sys.stderr)
         sys.exit(1)
 
-    results = []
+    matched = []
+    unmatched = []
     for sf in source_files:
         concept_path = source_to_concept_path(concept_root, sf)
         if not concept_path or not concept_path.exists():
@@ -188,20 +216,29 @@ def main():
                 continue
             sim = cosine_similarity(query_vec, target_vec)
             if sim >= args.threshold:
-                results.append((sim, sf))
+                matched.append((sim, sf))
+            else:
+                unmatched.append((sim, sf))
         except (ValueError, FileNotFoundError) as e:
             print(f"Warning: {concept_path}: {e}", file=sys.stderr)
 
-    results.sort(key=lambda x: x[0], reverse=True)
+    matched.sort(key=lambda x: x[0], reverse=True)
+    unmatched.sort(key=lambda x: x[0], reverse=True)
 
     if args.top > 0:
-        results = results[: args.top]
+        matched = matched[: args.top]
 
-    for sim, sf in results:
-        if args.score:
-            print(f"{sim:.3f} (>{args.threshold:.2f})\t{sf}")
-        else:
-            print(sf)
+    if args.verbose:
+        for sim, sf in matched:
+            print(f"  MATCH\t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+        for sim, sf in unmatched:
+            print(f"       \t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+    else:
+        for sim, sf in matched:
+            if args.score:
+                print(f"{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+            else:
+                print(sf)
 
 
 if __name__ == "__main__":
