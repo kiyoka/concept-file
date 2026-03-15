@@ -44,11 +44,57 @@ CNCP v1 1432
 
 ## セットアップ
 
+### インストール
+
 ```bash
+git clone https://github.com/kiyoka/concept-file.git
+cd concept-file
 python -m venv .venv
 source .venv/bin/activate
 pip install openai
+```
+
+`cli/` ディレクトリをPATHに追加します:
+
+```bash
+export PATH="$PWD/cli:$PATH"
+```
+
+シェルの設定ファイル（`~/.bashrc`, `~/.zshrc` 等）に追記すると永続化できます。
+
+### OpenAI APIを使う場合
+
+```bash
 export OPENAI_API_KEY="sk-..."
+```
+
+### ローカルLLMを使う場合（LM Studio）
+
+[LM Studio](https://lmstudio.ai/) を使えば、OpenAI APIの代わりにローカルの埋め込みモデルを利用できます。APIキーは不要です。
+
+1. LM Studioをインストールして起動
+2. 埋め込みモデルをダウンロード（例: `granite-embedding-278m-multilingual`）
+3. **Developer** タブでモデルをロード
+4. ローカルAPIサーバーが `http://localhost:1234/v1` で起動
+
+環境変数を設定します:
+
+```bash
+export CONCEPT_API_BASE="http://localhost:1234/v1"
+export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"
+```
+
+あとはCLIツールをそのまま使えます — 自動的にローカルモデルが使われます:
+
+```bash
+concept-embed --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
+```
+
+コマンドごとに指定することもできます:
+
+```bash
+concept-embed --api-base http://localhost:1234/v1 --model granite-embedding-278m-multilingual \
+  --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
 ```
 
 ## CLI ツール
