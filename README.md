@@ -188,19 +188,11 @@ concept-grep -r "payment processing" src/
 # Show scores
 concept-grep -s "data transmission to the server" src/*.java
 
-# Show all files with match/unmatch status
+# Invert match: show files below threshold
 concept-grep -v "data transmission to the server" src/*.java
 
 # Pipe-friendly
 concept-grep -r "error handling" src/ | xargs cat
-```
-
-`-v` output example:
-```
-  MATCH	0.690 (>0.50)	src/AuthService.java
-  MATCH	0.605 (>0.50)	src/User.java
-       	0.489 (>0.50)	src/Product.java
-       	0.432 (>0.50)	src/Order.java
 ```
 
 Index structure:
@@ -221,7 +213,7 @@ src/
 Options:
 - `-r, --recursive` — Recurse into directories (skips `.git/`, `.concept/`, `.venv/`, `node_modules/`)
 - `-s, --score` — Show similarity scores
-- `-v, --verbose` — Show all files with scores and threshold (matched and unmatched)
+- `-v, --invert-match` — Show files below threshold (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `--threshold` — Minimum similarity score (default: 0.5)
 - `--index` — Generate `.concept` files for the specified source files
