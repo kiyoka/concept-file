@@ -106,8 +106,8 @@ def main():
                         help="Recurse into directories")
     parser.add_argument("-s", "--score", action="store_true",
                         help="Show similarity scores")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Show all files with scores and threshold (matched and unmatched)")
+    parser.add_argument("-v", "--invert-match", action="store_true",
+                        help="Show files below threshold (invert match)")
     parser.add_argument("-n", "--top", type=int, default=0,
                         help="Show only top N results (default: all)")
     parser.add_argument("--threshold", type=float, default=0.5,
@@ -225,20 +225,18 @@ def main():
     matched.sort(key=lambda x: x[0], reverse=True)
     unmatched.sort(key=lambda x: x[0], reverse=True)
 
-    if args.top > 0:
-        matched = matched[: args.top]
+    # Select results based on -v flag
+    results = unmatched if args.invert_match else matched
 
-    if args.verbose:
-        for sim, sf in matched:
-            print(f"  MATCH\t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
-        for sim, sf in unmatched:
-            print(f"       \t{sim:.3f} (>{args.threshold:.2f})\t{sf}")
-    else:
-        for sim, sf in matched:
-            if args.score:
-                print(f"{sim:.3f} (>{args.threshold:.2f})\t{sf}")
-            else:
-                print(sf)
+    if args.top > 0:
+        results = results[: args.top]
+
+    for sim, sf in results:
+        if args.score:
+            op = "<" if args.invert_match else ">"
+            print(f"{sim:.3f} ({op}{args.threshold:.2f})\t{sf}")
+        else:
+            print(sf)
 
 
 if __name__ == "__main__":
