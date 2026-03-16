@@ -233,7 +233,8 @@ def main():
 
     for sim, sf in results:
         if args.score:
-            print(f"{sim:.3f} (>{args.threshold:.2f})\t{sf}")
+            op = "<" if args.invert_match else ">"
+            print(f"{sim:.3f} ({op}{args.threshold:.2f})\t{sf}")
         else:
             print(sf)
 
