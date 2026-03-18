@@ -111,7 +111,7 @@ cli/concept-embed --name "My Concept" --text "埋め込みたいテキスト" -o
 echo "埋め込みたいテキスト" | cli/concept-embed --name "My Concept" -o output.concept
 
 # ソースファイルから
-cat src/User.java | cli/concept-embed --name "User" -o concepts/User.concept
+cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
 ```
 
 オプション:
@@ -171,7 +171,7 @@ concept-search -n 5 "hydration problem" concepts/*.concept
 
 ### concept-grep
 
-セマンティック grep — ソースファイルを意味で検索します。ソースツリーをミラーした `.concept/` ディレクトリをインデックスとして使用します。
+セマンティック grep — ソースファイルを意味で検索します。`.concept/` ディレクトリの集中インデックス、またはソースファイルと同階層の `.concept` ファイルを使用します。
 
 ```bash
 # まずソースファイルをインデックス化
@@ -193,24 +193,33 @@ concept-grep -v "サーバーへのデータ送信" src/*.java
 concept-grep -r "エラーハンドリング" src/ | xargs cat
 ```
 
-インデックス構造:
+インデックスの検索順序:
+
+1. `.concept/` ディレクトリ（例: `.concept/src/main.java.concept`）
+2. ソースファイルと同階層（例: `src/main.java.concept`）— フォールバック
+
 ```text
+# 集中インデックス
 .concept/
 ├── src/
 │   ├── main.java.concept
-│   ├── client.java.concept
-│   └── util/
-│       └── util.java.concept
+│   └── client.java.concept
 src/
 ├── main.java
+└── client.java
+
+# または同階層レイアウト
+src/
+├── main.java
+├── main.java.concept
 ├── client.java
-└── util/
-    └── util.java
+└── client.java.concept
 ```
 
 オプション:
 - `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
 - `-s, --score` — 類似度スコアを表示
+- `-g, --graph` — 類似度をバーグラフで表示
 - `-v, --invert-match` — 閾値以下のファイルを表示（逆マッチ、`grep -v` と同様）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
 - `--threshold` — 最低類似度スコア（デフォルト: 0.5）
@@ -227,12 +236,12 @@ cli/concept-sim query.concept targets/*.concept
 ```
 
 ```
-1.000  User                 concepts/User.concept
-0.754  Order                concepts/Order.concept
-0.660  AuthService          concepts/AuthService.concept
-0.605  Product              concepts/Product.concept
-0.526  PaymentService       concepts/PaymentService.concept
-0.419  ProductSearchService concepts/ProductSearchService.concept
+1.000  User                 src/User.java.concept
+0.754  Order                src/Order.java.concept
+0.660  AuthService          src/AuthService.java.concept
+0.605  Product              src/Product.java.concept
+0.526  PaymentService       src/PaymentService.java.concept
+0.419  ProductSearchService src/ProductSearchService.java.concept
 ```
 
 `-s` オプションでスコアとしきい値を表示できます：
@@ -242,8 +251,8 @@ cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
 ```
 
 ```
-1.000 (>0.50)  User                 concepts/User.concept
-0.754 (>0.50)  Order                concepts/Order.concept
+1.000 (>0.50)  User                 src/User.java.concept
+0.754 (>0.50)  Order                src/Order.java.concept
 ```
 
 類似度 1.0 = 同一、0.0 = 完全に無関係。
@@ -302,7 +311,7 @@ pip install umap-learn plotly numpy
 ```bash
 for f in examples/java-project/src/*.java; do
   name=$(basename "$f" .java)
-  cat "$f" | cli/concept-embed --name "$name" --language en -o "examples/java-project/concepts/${name}.concept"
+  cat "$f" | cli/concept-embed --name "$name" --language en -o "${f}.concept"
 done
 ```
 
@@ -311,7 +320,7 @@ done
 「`User` に最も似ているクラスはどれ？」
 
 ```bash
-cli/concept-sim examples/java-project/concepts/User.concept examples/java-project/concepts/*.concept
+cli/concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
 ```
 
 結果は `Order`（購入関係）と `AuthService`（認証関係）が `User` に最も近いことを示しており、コード上の実際のドメイン関係と一致しています。
@@ -460,8 +469,7 @@ concept-file/
 │   └── concept-plot         — UMAP 2D/3D 散布図で可視化
 └── examples/
     ├── java-project/
-    │   ├── src/             — サンプル Java ソースファイル
-    │   └── concepts/        — 生成された .concept ファイル
+    │   └── src/             — サンプル Java ソースファイルと .concept ファイル
     ├── wikipedia/
     │   ├── fetch.sh         — 英語版 Wikipedia データ取得
     │   ├── fetch-ja.sh      — 日本語版 Wikipedia データ取得

@@ -113,7 +113,7 @@ cli/concept-embed --name "My Concept" --text "Some text to embed" -o output.conc
 echo "Some text to embed" | cli/concept-embed --name "My Concept" -o output.concept
 
 # From a source file
-cat src/User.java | cli/concept-embed --name "User" -o concepts/User.concept
+cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
 ```
 
 Options:
@@ -173,7 +173,7 @@ Options:
 
 ### concept-grep
 
-Semantic grep — find source files by meaning. Uses a `.concept/` directory as an index that mirrors your source tree structure.
+Semantic grep — find source files by meaning. Uses `.concept` files as an index — either from a centralized `.concept/` directory or from `.concept` files alongside each source file.
 
 ```bash
 # Index source files first
@@ -195,24 +195,33 @@ concept-grep -v "data transmission to the server" src/*.java
 concept-grep -r "error handling" src/ | xargs cat
 ```
 
-Index structure:
+Index lookup order:
+
+1. `.concept/` directory (e.g., `.concept/src/main.java.concept`)
+2. Same directory as source file (e.g., `src/main.java.concept`) — fallback
+
 ```text
+# Centralized index
 .concept/
 ├── src/
 │   ├── main.java.concept
-│   ├── client.java.concept
-│   └── util/
-│       └── util.java.concept
+│   └── client.java.concept
 src/
 ├── main.java
+└── client.java
+
+# Or same-directory layout
+src/
+├── main.java
+├── main.java.concept
 ├── client.java
-└── util/
-    └── util.java
+└── client.java.concept
 ```
 
 Options:
 - `-r, --recursive` — Recurse into directories (skips `.git/`, `.concept/`, `.venv/`, `node_modules/`)
 - `-s, --score` — Show similarity scores
+- `-g, --graph` — Show similarity as a bar graph
 - `-v, --invert-match` — Show files below threshold (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `--threshold` — Minimum similarity score (default: 0.5)
@@ -229,12 +238,12 @@ cli/concept-sim query.concept targets/*.concept
 ```
 
 ```
-1.000  User                 concepts/User.concept
-0.754  Order                concepts/Order.concept
-0.660  AuthService          concepts/AuthService.concept
-0.605  Product              concepts/Product.concept
-0.526  PaymentService       concepts/PaymentService.concept
-0.419  ProductSearchService concepts/ProductSearchService.concept
+1.000  User                 src/User.java.concept
+0.754  Order                src/Order.java.concept
+0.660  AuthService          src/AuthService.java.concept
+0.605  Product              src/Product.java.concept
+0.526  PaymentService       src/PaymentService.java.concept
+0.419  ProductSearchService src/ProductSearchService.java.concept
 ```
 
 Use `-s` to show scores with threshold:
@@ -244,8 +253,8 @@ cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
 ```
 
 ```
-1.000 (>0.50)  User                 concepts/User.concept
-0.754 (>0.50)  Order                concepts/Order.concept
+1.000 (>0.50)  User                 src/User.java.concept
+0.754 (>0.50)  Order                src/Order.java.concept
 ```
 
 Similarity 1.0 = identical, 0.0 = completely unrelated.
@@ -303,7 +312,7 @@ A fictional e-commerce application with 6 classes:
 ```bash
 for f in examples/java-project/src/*.java; do
   name=$(basename "$f" .java)
-  cat "$f" | cli/concept-embed --name "$name" --language en -o "examples/java-project/concepts/${name}.concept"
+  cat "$f" | cli/concept-embed --name "$name" --language en -o "${f}.concept"
 done
 ```
 
@@ -312,7 +321,7 @@ done
 "Which classes are most similar to `User`?"
 
 ```bash
-cli/concept-dist examples/java-project/concepts/User.concept examples/java-project/concepts/*.concept
+cli/concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
 ```
 
 Results show that `Order` (purchase relationship) and `AuthService` (authentication relationship) are closest to `User`, which matches the actual domain relationships in the code.
@@ -439,8 +448,7 @@ concept-file/
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization
 └── examples/
     ├── java-project/
-    │   ├── src/             — Sample Java source files
-    │   └── concepts/        — Generated .concept files
+    │   └── src/             — Sample Java source files with .concept files alongside
     ├── wikipedia/
     │   ├── fetch.sh         — English Wikipedia data fetcher
     │   ├── fetch-ja.sh      — Japanese Wikipedia data fetcher

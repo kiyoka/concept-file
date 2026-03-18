@@ -28,6 +28,8 @@ def find_concept_root(start=None):
 
 def source_to_concept_path(concept_root, source_path):
     """Map a source file path to its .concept file path."""
+    if not concept_root:
+        return None
     # source_path relative to the project root (parent of .concept/)
     project_root = concept_root.parent
     try:
@@ -188,11 +190,6 @@ def main():
         print("Error: query text is required for search mode.", file=sys.stderr)
         sys.exit(1)
 
-    if not concept_root:
-        print("Error: .concept/ directory not found.", file=sys.stderr)
-        print("Run 'concept-grep --index -r *' to generate the index first.", file=sys.stderr)
-        sys.exit(1)
-
     search_paths = args.paths if args.paths else ["."]
     source_files = collect_source_files(search_paths, args.recursive)
     if not source_files:
@@ -210,7 +207,12 @@ def main():
     for sf in source_files:
         concept_path = source_to_concept_path(concept_root, sf)
         if not concept_path or not concept_path.exists():
-            continue
+            # Fallback: check for .concept file alongside the source file
+            fallback = Path(str(sf) + ".concept")
+            if fallback.exists():
+                concept_path = fallback
+            else:
+                continue
         try:
             data = read_concept(str(concept_path))
             target_vec = data.get("embedding", {}).get("vector")
