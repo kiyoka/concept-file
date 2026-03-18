@@ -1,0 +1,8 @@
+CNCP v1 545
+{
+  "concept": "hello.c",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.763694+00:00",
+  "text": "#include <stdio.h>\n\nstruct Point {\n    int x;\n    int y;\n};\n\nint add(int a, int b) {\n    return a + b;\n}\n\nvoid print_point(struct Point p) {\n    printf(\"(%d, %d)\\n\", p.x, p.y);\n}\n\nint main() {\n    struct Point p = {3, 4};\n    print_point(p);\n    return 0;\n}\n",
+  "embed_source": "hello.c\n#include <stdio.h>\n\nstruct Point\n  int x\n  int y\nint add(int a, int b)\nvoid print_point(struct Point p)\nint main()"
+}

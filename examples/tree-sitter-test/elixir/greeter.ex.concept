@@ -1,0 +1,8 @@
+CNCP v1 333
+{
+  "concept": "greeter.ex",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.460965+00:00",
+  "text": "defmodule Greeter do\n  def hello(name) do\n    \"Hello, #{name}!\"\n  end\n\n  def main do\n    IO.puts(hello(\"World\"))\n  end\nend\n",
+  "embed_source": "greeter.ex\ndefmodule Greeter\n  def hello(name)\n  def main"
+}

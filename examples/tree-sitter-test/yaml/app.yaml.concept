@@ -1,0 +1,8 @@
+CNCP v1 377
+{
+  "concept": "app.yaml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:30.152883+00:00",
+  "text": "app:\n  name: my-app\n  version: \"1.0.0\"\n  debug: false\n\nserver:\n  host: \"0.0.0.0\"\n  port: 8080\n\nlogging:\n  level: info\n  format: json\n",
+  "embed_source": "app.yaml\napp\n  name\n  version\n  debug\nserver\n  host\n  port\nlogging\n  level\n  format"
+}

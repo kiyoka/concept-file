@@ -1,0 +1,8 @@
+CNCP v1 416
+{
+  "concept": "tsconfig.json",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:30.076384+00:00",
+  "text": "{\n  \"compilerOptions\": {\n    \"target\": \"ES2020\",\n    \"module\": \"commonjs\",\n    \"strict\": true,\n    \"outDir\": \"./dist\"\n  },\n  \"include\": [\"src/**/*\"],\n  \"exclude\": [\"node_modules\"]\n}\n",
+  "embed_source": "tsconfig.json\n\"compilerOptions\"\n\"include\"\n\"exclude\""
+}

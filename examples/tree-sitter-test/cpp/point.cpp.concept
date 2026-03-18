@@ -1,0 +1,8 @@
+CNCP v1 814
+{
+  "concept": "point.cpp",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.836777+00:00",
+  "text": "#include <cmath>\n#include <iostream>\n\nclass Point {\npublic:\n    double x, y;\n\n    Point(double x, double y) : x(x), y(y) {}\n\n    double distance(const Point& other) const {\n        return std::sqrt(std::pow(x - other.x, 2) + std::pow(y - other.y, 2));\n    }\n\n    void print() const {\n        std::cout << \"(\" << x << \", \" << y << \")\" << std::endl;\n    }\n};\n\nint main() {\n    Point a(0, 0), b(3, 4);\n    std::cout << a.distance(b) << std::endl;\n    return 0;\n}\n",
+  "embed_source": "point.cpp\n#include <cmath>\n\n#include <iostream>\n\nclass Point\n  double x, y\n   Point(double x, double y)\n  double distance(const Point& other) const\n  void print() const\nint main()"
+}

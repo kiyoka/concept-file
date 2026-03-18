@@ -1,0 +1,8 @@
+CNCP v1 612
+{
+  "concept": "hello.zig",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.841385+00:00",
+  "text": "const std = @import(\"std\");\n\nconst Point = struct {\n    x: f64,\n    y: f64,\n\n    fn distance(self: Point, other: Point) f64 {\n        const dx = self.x - other.x;\n        const dy = self.y - other.y;\n        return @sqrt(dx * dx + dy * dy);\n    }\n};\n\npub fn main() void {\n    const a = Point{ .x = 0, .y = 0 };\n    const b = Point{ .x = 3, .y = 4 };\n    std.debug.print(\"{d}\\n\", .{a.distance(b)});\n}\n",
+  "embed_source": "hello.zig\nconst std\nconst Point\npub fn main() void"
+}

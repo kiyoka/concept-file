@@ -1,0 +1,8 @@
+CNCP v1 534
+{
+  "concept": "hello.php",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.075004+00:00",
+  "text": "<?php\n\nclass Greeter {\n    private string $name;\n\n    public function __construct(string $name) {\n        $this->name = $name;\n    }\n\n    public function greet(): string {\n        return \"Hello, {$this->name}!\";\n    }\n}\n\n$g = new Greeter(\"World\");\necho $g->greet() . \"\\n\";\n",
+  "embed_source": "hello.php\nclass Greeter\n  private string $name\n  method __construct(string $name)\n  method greet()"
+}

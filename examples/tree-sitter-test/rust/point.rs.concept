@@ -1,0 +1,8 @@
+CNCP v1 559
+{
+  "concept": "point.rs",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.688533+00:00",
+  "text": "pub struct Point {\n    pub x: f64,\n    pub y: f64,\n}\n\nimpl Point {\n    pub fn new(x: f64, y: f64) -> Self {\n        Point { x, y }\n    }\n\n    pub fn distance(&self, other: &Point) -> f64 {\n        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()\n    }\n}\n",
+  "embed_source": "point.rs\nstruct Point\n  pub x: f64\n  pub y: f64\nimpl Point\n  fn new(x: f64, y: f64) -> Self\n  fn distance(&self, other: &Point) -> f64"
+}

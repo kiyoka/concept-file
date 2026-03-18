@@ -1,0 +1,8 @@
+CNCP v1 423
+{
+  "concept": "Greeter.scala",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.303281+00:00",
+  "text": "case class Greeter(name: String) {\n  def greet: String = s\"Hello, $name!\"\n}\n\nobject Main extends App {\n  val greeter = Greeter(\"World\")\n  println(greeter.greet)\n}\n",
+  "embed_source": "Greeter.scala\ncase class Greeter(name: String)\n  def greet: String\nobject Main extends App\n  val greeter"
+}

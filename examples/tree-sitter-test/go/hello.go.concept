@@ -1,0 +1,8 @@
+CNCP v1 490
+{
+  "concept": "hello.go",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.616261+00:00",
+  "text": "package main\n\nimport \"fmt\"\n\ntype Greeter struct {\n\tName string\n}\n\nfunc (g Greeter) Greet() string {\n\treturn fmt.Sprintf(\"Hello, %s!\", g.Name)\n}\n\nfunc main() {\n\tg := Greeter{Name: \"World\"}\n\tfmt.Println(g.Greet())\n}\n",
+  "embed_source": "hello.go\npackage main\nimport \"fmt\"\nstruct Greeter\n  Name string\nfunc (g Greeter) Greet() string\nfunc main()"
+}

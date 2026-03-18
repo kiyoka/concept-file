@@ -1,0 +1,8 @@
+CNCP v1 322
+{
+  "concept": "hello.sh",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.606839+00:00",
+  "text": "#!/bin/bash\n\ngreet() {\n    local name=\"$1\"\n    echo \"Hello, ${name}!\"\n}\n\nadd() {\n    echo $(( $1 + $2 ))\n}\n\ngreet \"World\"\nadd 3 4\n",
+  "embed_source": "hello.sh\nfunction greet\nfunction add"
+}

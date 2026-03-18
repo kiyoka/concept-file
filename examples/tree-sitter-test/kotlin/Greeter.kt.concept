@@ -1,0 +1,8 @@
+CNCP v1 395
+{
+  "concept": "Greeter.kt",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.226321+00:00",
+  "text": "data class Greeter(val name: String) {\n    fun greet(): String = \"Hello, $name!\"\n}\n\nfun main() {\n    val greeter = Greeter(\"World\")\n    println(greeter.greet())\n}\n",
+  "embed_source": "Greeter.kt\ndata class Greeter(val name: String)\n  fun greet(): String\nfun main()"
+}

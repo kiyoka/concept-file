@@ -1,0 +1,8 @@
+CNCP v1 362
+{
+  "concept": "hello.html",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.917731+00:00",
+  "text": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Hello</title>\n</head>\n<body>\n  <h1>Hello, World!</h1>\n  <p>A simple HTML page.</p>\n</body>\n</html>\n",
+  "embed_source": "hello.html\n<head>\n  <title>\n<body>"
+}

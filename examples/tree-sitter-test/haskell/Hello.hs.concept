@@ -1,0 +1,8 @@
+CNCP v1 420
+{
+  "concept": "Hello.hs",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.382994+00:00",
+  "text": "module Hello where\n\ngreet :: String -> String\ngreet name = \"Hello, \" ++ name ++ \"!\"\n\nadd :: Int -> Int -> Int\nadd x y = x + y\n\nmain :: IO ()\nmain = putStrLn (greet \"World\")\n",
+  "embed_source": "Hello.hs\nmodule Hello where\ngreet :: String -> String\nadd :: Int -> Int -> Int\nmain :: IO ()"
+}

@@ -1,0 +1,8 @@
+CNCP v1 501
+{
+  "concept": "greeter.lua",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.532928+00:00",
+  "text": "local Greeter = {}\nGreeter.__index = Greeter\n\nfunction Greeter.new(name)\n    local self = setmetatable({}, Greeter)\n    self.name = name\n    return self\nend\n\nfunction Greeter:greet()\n    return \"Hello, \" .. self.name .. \"!\"\nend\n\nlocal g = Greeter.new(\"World\")\nprint(g:greet())\n",
+  "embed_source": "greeter.lua\nfunction Greeter.new(name)\nfunction Greeter:greet()"
+}

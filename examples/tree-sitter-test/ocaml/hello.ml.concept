@@ -1,0 +1,8 @@
+CNCP v1 354
+{
+  "concept": "hello.ml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.764032+00:00",
+  "text": "let greet name =\n  \"Hello, \" ^ name ^ \"!\"\n\nlet add x y = x + y\n\nlet () =\n  let msg = greet \"World\" in\n  print_endline msg;\n  Printf.printf \"%d\\n\" (add 3 4)\n",
+  "embed_source": "hello.ml\nlet greet name\nlet add x y\nlet ()"
+}

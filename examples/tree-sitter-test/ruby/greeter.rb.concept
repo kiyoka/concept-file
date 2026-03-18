@@ -1,0 +1,8 @@
+CNCP v1 375
+{
+  "concept": "greeter.rb",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.996394+00:00",
+  "text": "class Greeter\n  attr_reader :name\n\n  def initialize(name)\n    @name = name\n  end\n\n  def greet\n    \"Hello, #{name}!\"\n  end\nend\n\nputs Greeter.new(\"World\").greet\n",
+  "embed_source": "greeter.rb\nclass Greeter\n  def initialize(name)\n  def greet"
+}

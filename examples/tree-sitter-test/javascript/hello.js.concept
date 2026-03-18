@@ -1,0 +1,8 @@
+CNCP v1 345
+{
+  "concept": "hello.js",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.469851+00:00",
+  "text": "function greet(name) {\n  return `Hello, ${name}!`;\n}\n\nfunction add(a, b) {\n  return a + b;\n}\n\nconst message = greet(\"World\");\nconsole.log(message);\n",
+  "embed_source": "hello.js\nfunction greet(name)\nfunction add(a, b)"
+}

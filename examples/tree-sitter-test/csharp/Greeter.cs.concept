@@ -1,0 +1,8 @@
+CNCP v1 486
+{
+  "concept": "Greeter.cs",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:28.916352+00:00",
+  "text": "namespace Example;\n\npublic class Greeter\n{\n    public string Name { get; set; }\n\n    public Greeter(string name)\n    {\n        Name = name;\n    }\n\n    public string Greet()\n    {\n        return $\"Hello, {Name}!\";\n    }\n}\n",
+  "embed_source": "Greeter.cs\nclass Greeter\n  property Name: string\n  constructor Greeter(string name)\n  method Greet(): void"
+}

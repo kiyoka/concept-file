@@ -1,0 +1,8 @@
+CNCP v1 261
+{
+  "concept": "simple.toml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:30.231417+00:00",
+  "text": "[package]\nname = \"hello\"\nversion = \"0.1.0\"\n\n[dependencies]\nserde = \"1.0\"\n",
+  "embed_source": "simple.toml\n[package]\n[dependencies]"
+}

@@ -1,0 +1,8 @@
+CNCP v1 665
+{
+  "concept": "Hello.m",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.685083+00:00",
+  "text": "#import <Foundation/Foundation.h>\n\n@interface Greeter : NSObject\n@property (nonatomic, strong) NSString *name;\n- (NSString *)greet;\n@end\n\n@implementation Greeter\n- (NSString *)greet {\n    return [NSString stringWithFormat:@\"Hello, %@!\", self.name];\n}\n@end\n\nint main() {\n    Greeter *g = [[Greeter alloc] init];\n    g.name = @\"World\";\n    NSLog(@\"%@\", [g greet]);\n    return 0;\n}\n",
+  "embed_source": "Hello.m\n#import <Foundation/Foundation.h>\n\n  @property (nonatomic, strong) NSString *name\n  - (NSString *)greet\nint main()"
+}

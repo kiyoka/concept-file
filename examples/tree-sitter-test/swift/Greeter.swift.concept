@@ -1,0 +1,8 @@
+CNCP v1 412
+{
+  "concept": "Greeter.swift",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:36:29.157119+00:00",
+  "text": "struct Greeter {\n    let name: String\n\n    func greet() -> String {\n        return \"Hello, \\(name)!\"\n    }\n}\n\nlet greeter = Greeter(name: \"World\")\nprint(greeter.greet())\n",
+  "embed_source": "Greeter.swift\nclass Greeter\n  let name: String\n  func greet() -> String\nlet greeter"
+}
