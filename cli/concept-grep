@@ -234,7 +234,7 @@ def main():
     for sim, sf in results:
         if args.score:
             op = "<" if args.invert_match else ">"
-            bar = "+" * max(1, int(sim * 10))
+            bar = "█" * max(1, int(sim * 10))
             print(f"{bar:<10}({op}{args.threshold:.2f})\t{sf}")
         else:
             print(sf)
