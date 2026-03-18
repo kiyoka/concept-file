@@ -233,10 +233,19 @@ def main():
     if args.top > 0:
         results = results[: args.top]
 
+    if args.graph and results:
+        sims = [s for s, _ in results]
+        min_sim, max_sim = min(sims), max(sims)
+        sim_range = max_sim - min_sim
+
     for sim, sf in results:
         op = "<" if args.invert_match else ">"
         if args.graph:
-            bar = "█" * max(1, int(sim * 10))
+            if sim_range == 0:
+                bar_width = 10
+            else:
+                bar_width = max(1, round((sim - min_sim) / sim_range * 10))
+            bar = "█" * bar_width
             print(f"{bar:<10}({op}{args.threshold:.2f})\t{sf}")
         elif args.score:
             print(f"{sim:.3f} ({op}{args.threshold:.2f})\t{sf}")
