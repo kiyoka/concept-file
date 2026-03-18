@@ -1,0 +1,8 @@
+CNCP v1 1472
+{
+  "concept": "userService.ts",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:39.463596+00:00",
+  "text": "interface User {\n  id: number;\n  name: string;\n  email: string;\n}\n\ntype Role = 'admin' | 'editor' | 'viewer';\n\nenum Status {\n  Active,\n  Inactive,\n  Banned,\n}\n\nclass UserService {\n  private users: Map<number, User> = new Map();\n\n  create(name: string, email: string): User {\n    const id = this.users.size + 1;\n    const user: User = { id, name, email };\n    this.users.set(id, user);\n    return user;\n  }\n\n  findById(id: number): User | undefined {\n    return this.users.get(id);\n  }\n\n  findByEmail(email: string): User | undefined {\n    for (const user of this.users.values()) {\n      if (user.email === email) return user;\n    }\n    return undefined;\n  }\n\n  delete(id: number): boolean {\n    return this.users.delete(id);\n  }\n\n  listAll(): User[] {\n    return Array.from(this.users.values());\n  }\n}\n\nexport function createUserService(): UserService {\n  return new UserService();\n}\n",
+  "embed_source": "userService.ts\ninterface User\n  prop id: number\n  prop name: string\n  prop email: string\ntype Role\nenum Status\nclass UserService\n  method create(name: string, email: string): User\n  method findById(id: number): User | undefined\n  method findByEmail(email: string): User | undefined\n  method delete(id: number): boolean\n  method listAll(): User[]\nfunction createUserService(): UserService"
+}

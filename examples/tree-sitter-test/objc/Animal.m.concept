@@ -1,0 +1,8 @@
+CNCP v1 1126
+{
+  "concept": "Animal.m",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.742853+00:00",
+  "text": "#import <Foundation/Foundation.h>\n\n@protocol Speakable\n- (NSString *)speak;\n@end\n\n@interface Animal : NSObject <Speakable>\n@property (nonatomic, strong) NSString *name;\n@property (nonatomic, assign) NSInteger age;\n- (instancetype)initWithName:(NSString *)name age:(NSInteger)age;\n- (void)eat:(NSString *)food;\n@end\n\n@implementation Animal\n\n- (instancetype)initWithName:(NSString *)name age:(NSInteger)age {\n    self = [super init];\n    if (self) {\n        _name = name;\n        _age = age;\n    }\n    return self;\n}\n\n- (NSString *)speak {\n    return [NSString stringWithFormat:@\"%@ says hello\", self.name];\n}\n\n- (void)eat:(NSString *)food {\n    NSLog(@\"%@ eats %@\", self.name, food);\n}\n\n@end\n",
+  "embed_source": "Animal.m\n#import <Foundation/Foundation.h>\n\n  - (NSString *)speak\n  @property (nonatomic, strong) NSString *name\n  @property (nonatomic, assign) NSInteger age\n  - (instancetype)initWithName:(NSString *)name age:(NSInteger)age\n  - (void)eat:(NSString *)food"
+}

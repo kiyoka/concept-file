@@ -1,0 +1,8 @@
+CNCP v1 1759
+{
+  "concept": "linked_list.c",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:39.720746+00:00",
+  "text": "#include <stdlib.h>\n#include <stdio.h>\n\nstruct Node {\n    int data;\n    struct Node *next;\n};\n\nstruct LinkedList {\n    struct Node *head;\n    int size;\n};\n\nstruct LinkedList *list_create(void) {\n    struct LinkedList *list = malloc(sizeof(struct LinkedList));\n    list->head = NULL;\n    list->size = 0;\n    return list;\n}\n\nvoid list_push(struct LinkedList *list, int data) {\n    struct Node *node = malloc(sizeof(struct Node));\n    node->data = data;\n    node->next = list->head;\n    list->head = node;\n    list->size++;\n}\n\nint list_pop(struct LinkedList *list) {\n    if (list->head == NULL) return -1;\n    struct Node *node = list->head;\n    int data = node->data;\n    list->head = node->next;\n    free(node);\n    list->size--;\n    return data;\n}\n\nvoid list_print(struct LinkedList *list) {\n    struct Node *current = list->head;\n    while (current != NULL) {\n        printf(\"%d -> \", current->data);\n        current = current->next;\n    }\n    printf(\"NULL\\n\");\n}\n\nvoid list_free(struct LinkedList *list) {\n    struct Node *current = list->head;\n    while (current != NULL) {\n        struct Node *next = current->next;\n        free(current);\n        current = next;\n    }\n    free(list);\n}\n",
+  "embed_source": "linked_list.c\n#include <stdlib.h>\n\n#include <stdio.h>\n\nstruct Node\n  int data\n  struct Node *next\nstruct LinkedList\n  struct Node *head\n  int size\nstruct LinkedList *list_create(void)\nvoid list_push(struct LinkedList *list, int data)\nint list_pop(struct LinkedList *list)\nvoid list_print(struct LinkedList *list)\nvoid list_free(struct LinkedList *list)"
+}

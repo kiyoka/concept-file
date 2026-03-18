@@ -1,0 +1,8 @@
+CNCP v1 1394
+{
+  "concept": "theme.css",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:41.088658+00:00",
+  "text": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');\n\n:root {\n  --primary: #3b82f6;\n  --secondary: #64748b;\n  --bg: #ffffff;\n  --text: #1e293b;\n}\n\nbody {\n  font-family: 'Inter', sans-serif;\n  background: var(--bg);\n  color: var(--text);\n  margin: 0;\n  padding: 0;\n}\n\nheader {\n  background: var(--primary);\n  color: white;\n  padding: 1rem 2rem;\n}\n\nnav a {\n  color: white;\n  text-decoration: none;\n  margin-right: 1.5rem;\n}\n\nmain {\n  max-width: 1200px;\n  margin: 0 auto;\n  padding: 2rem;\n}\n\n.card {\n  border: 1px solid #e2e8f0;\n  border-radius: 8px;\n  padding: 1.5rem;\n  margin-bottom: 1rem;\n}\n\n.btn-primary {\n  background: var(--primary);\n  color: white;\n  border: none;\n  padding: 0.5rem 1rem;\n  border-radius: 4px;\n  cursor: pointer;\n}\n\n@media (max-width: 768px) {\n  main {\n    padding: 1rem;\n  }\n\n  .card {\n    padding: 1rem;\n  }\n}\n\n@media (prefers-color-scheme: dark) {\n  :root {\n    --bg: #0f172a;\n    --text: #e2e8f0;\n  }\n}\n",
+  "embed_source": "theme.css\n@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');\n:root\nbody\nheader\nnav a\nmain\n.card\n.btn-primary\n@media (max-width: 768px)\n@media (prefers-color-scheme: dark)"
+}

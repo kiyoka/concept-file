@@ -1,0 +1,8 @@
+CNCP v1 772
+{
+  "concept": "package.json",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:41.169909+00:00",
+  "text": "{\n  \"name\": \"example-app\",\n  \"version\": \"1.0.0\",\n  \"description\": \"An example Node.js application\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"start\": \"node index.js\",\n    \"test\": \"jest\",\n    \"build\": \"tsc\",\n    \"lint\": \"eslint src/\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.0\",\n    \"pg\": \"^8.11.0\",\n    \"redis\": \"^4.6.0\"\n  },\n  \"devDependencies\": {\n    \"jest\": \"^29.0.0\",\n    \"typescript\": \"^5.0.0\",\n    \"eslint\": \"^8.0.0\"\n  }\n}\n",
+  "embed_source": "package.json\n\"name\"\n\"version\"\n\"description\"\n\"main\"\n\"scripts\"\n\"dependencies\"\n\"devDependencies\""
+}

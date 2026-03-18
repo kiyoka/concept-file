@@ -1,0 +1,8 @@
+CNCP v1 1341
+{
+  "concept": "counter.ex",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.498213+00:00",
+  "text": "defmodule Counter do\n  use GenServer\n\n  def start_link(initial_value \\\\ 0) do\n    GenServer.start_link(__MODULE__, initial_value, name: __MODULE__)\n  end\n\n  def increment do\n    GenServer.call(__MODULE__, :increment)\n  end\n\n  def decrement do\n    GenServer.call(__MODULE__, :decrement)\n  end\n\n  def value do\n    GenServer.call(__MODULE__, :value)\n  end\n\n  def reset do\n    GenServer.cast(__MODULE__, :reset)\n  end\n\n  # Server callbacks\n\n  def init(initial_value) do\n    {:ok, initial_value}\n  end\n\n  def handle_call(:increment, _from, state) do\n    {:reply, state + 1, state + 1}\n  end\n\n  def handle_call(:decrement, _from, state) do\n    {:reply, state - 1, state - 1}\n  end\n\n  def handle_call(:value, _from, state) do\n    {:reply, state, state}\n  end\n\n  def handle_cast(:reset, _state) do\n    {:noreply, 0}\n  end\nend\n",
+  "embed_source": "counter.ex\ndefmodule Counter\n  use GenServer\n  def start_link(initial_value \\\\ 0)\n  def increment\n  def decrement\n  def value\n  def reset\n  def init(initial_value)\n  def handle_call(:increment, _from, state)\n  def handle_call(:decrement, _from, state)\n  def handle_call(:value, _from, state)\n  def handle_cast(:reset, _state)"
+}

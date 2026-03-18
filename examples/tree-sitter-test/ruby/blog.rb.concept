@@ -1,0 +1,8 @@
+CNCP v1 1390
+{
+  "concept": "blog.rb",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:39.974582+00:00",
+  "text": "module Blog\n  class Post\n    attr_accessor :title, :body, :author, :tags\n\n    def initialize(title, body, author)\n      @title = title\n      @body = body\n      @author = author\n      @tags = []\n      @published_at = nil\n    end\n\n    def publish\n      @published_at = Time.now\n    end\n\n    def published?\n      !@published_at.nil?\n    end\n\n    def add_tag(tag)\n      @tags << tag unless @tags.include?(tag)\n    end\n\n    def summary(length = 100)\n      body.length > length ? body[0...length] + \"...\" : body\n    end\n  end\n\n  class Blog\n    attr_reader :name, :posts\n\n    def initialize(name)\n      @name = name\n      @posts = []\n    end\n\n    def add_post(post)\n      @posts << post\n    end\n\n    def published_posts\n      @posts.select(&:published?)\n    end\n\n    def find_by_tag(tag)\n      @posts.select { |p| p.tags.include?(tag) }\n    end\n\n    def self.create(name)\n      new(name)\n    end\n  end\nend\n",
+  "embed_source": "blog.rb\nmodule Blog\n  class Post\n    def initialize(title, body, author)\n    def publish\n    def published?\n    def add_tag(tag)\n    def summary(length = 100)\n  class Blog\n    def initialize(name)\n    def add_post(post)\n    def published_posts\n    def find_by_tag(tag)\n    def self.create"
+}

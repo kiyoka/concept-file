@@ -1,0 +1,8 @@
+CNCP v1 1724
+{
+  "concept": "game.lua",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.577758+00:00",
+  "text": "local Entity = {}\nEntity.__index = Entity\n\nfunction Entity.new(name, x, y)\n    local self = setmetatable({}, Entity)\n    self.name = name\n    self.x = x\n    self.y = y\n    self.health = 100\n    return self\nend\n\nfunction Entity:move(dx, dy)\n    self.x = self.x + dx\n    self.y = self.y + dy\nend\n\nfunction Entity:damage(amount)\n    self.health = math.max(0, self.health - amount)\nend\n\nfunction Entity:isAlive()\n    return self.health > 0\nend\n\nlocal World = {}\nWorld.__index = World\n\nfunction World.new(width, height)\n    local self = setmetatable({}, World)\n    self.width = width\n    self.height = height\n    self.entities = {}\n    return self\nend\n\nfunction World:addEntity(entity)\n    table.insert(self.entities, entity)\nend\n\nfunction World:update(dt)\n    for _, entity in ipairs(self.entities) do\n        if entity.isAlive and entity:isAlive() then\n            -- update logic\n        end\n    end\nend\n\nfunction World:findNearby(x, y, radius)\n    local found = {}\n    for _, entity in ipairs(self.entities) do\n        local dx = entity.x - x\n        local dy = entity.y - y\n        if math.sqrt(dx*dx + dy*dy) <= radius then\n            table.insert(found, entity)\n        end\n    end\n    return found\nend\n\nreturn {\n    Entity = Entity,\n    World = World,\n}\n",
+  "embed_source": "game.lua\nfunction Entity.new(name, x, y)\nfunction Entity:move(dx, dy)\nfunction Entity:damage(amount)\nfunction Entity:isAlive()\nfunction World.new(width, height)\nfunction World:addEntity(entity)\nfunction World:update(dt)\nfunction World:findNearby(x, y, radius)"
+}

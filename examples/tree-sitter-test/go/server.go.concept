@@ -1,0 +1,8 @@
+CNCP v1 1406
+{
+  "concept": "server.go",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:39.548739+00:00",
+  "text": "package server\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"sync\"\n)\n\ntype Config struct {\n\tHost string\n\tPort int\n}\n\ntype Handler interface {\n\tServeHTTP(w http.ResponseWriter, r *http.Request)\n\tPattern() string\n}\n\ntype Server struct {\n\tconfig   Config\n\thandlers []Handler\n\tmu       sync.RWMutex\n}\n\nfunc New(config Config) *Server {\n\treturn &Server{\n\t\tconfig:   config,\n\t\thandlers: make([]Handler, 0),\n\t}\n}\n\nfunc (s *Server) Register(h Handler) {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n\ts.handlers = append(s.handlers, h)\n}\n\nfunc (s *Server) Start() error {\n\tmux := http.NewServeMux()\n\tfor _, h := range s.handlers {\n\t\tmux.Handle(h.Pattern(), h)\n\t}\n\taddr := fmt.Sprintf(\"%s:%d\", s.config.Host, s.config.Port)\n\treturn http.ListenAndServe(addr, mux)\n}\n\nfunc (s *Server) Address() string {\n\treturn fmt.Sprintf(\"%s:%d\", s.config.Host, s.config.Port)\n}\n",
+  "embed_source": "server.go\npackage server\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"sync\"\n)\nstruct Config\n  Host string\n  Port int\ninterface Handler\nstruct Server\n  config   Config\n  handlers []Handler\n  mu       sync.RWMutex\nfunc New(config Config) *Server\nfunc (s *Server) Register(h Handler)\nfunc (s *Server) Start() error\nfunc (s *Server) Address() string"
+}

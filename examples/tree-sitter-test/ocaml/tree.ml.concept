@@ -1,0 +1,8 @@
+CNCP v1 1040
+{
+  "concept": "tree.ml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.837766+00:00",
+  "text": "type 'a tree =\n  | Leaf\n  | Node of 'a tree * 'a * 'a tree\n\nlet rec insert x = function\n  | Leaf -> Node (Leaf, x, Leaf)\n  | Node (l, v, r) ->\n    if x < v then Node (insert x l, v, r)\n    else if x > v then Node (l, v, insert x r)\n    else Node (l, v, r)\n\nlet rec member x = function\n  | Leaf -> false\n  | Node (l, v, r) ->\n    if x < v then member x l\n    else if x > v then member x r\n    else true\n\nlet rec size = function\n  | Leaf -> 0\n  | Node (l, _, r) -> 1 + size l + size r\n\nlet rec height = function\n  | Leaf -> 0\n  | Node (l, _, r) -> 1 + max (height l) (height r)\n\nlet rec to_list = function\n  | Leaf -> []\n  | Node (l, v, r) -> to_list l @ [v] @ to_list r\n\nmodule type OrderedType = sig\n  type t\n  val compare : t -> t -> int\nend\n",
+  "embed_source": "tree.ml\ntype 'a tree\nlet rec insert x\nlet rec member x\nlet rec size\nlet rec height\nlet rec to_list\nmodule type OrderedType"
+}

@@ -1,0 +1,8 @@
+CNCP v1 733
+{
+  "concept": "config.toml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:41.336501+00:00",
+  "text": "[package]\nname = \"my-app\"\nversion = \"0.1.0\"\nedition = \"2021\"\nauthors = [\"Alice <alice@example.com>\"]\n\n[dependencies]\nserde = { version = \"1.0\", features = [\"derive\"] }\ntokio = { version = \"1\", features = [\"full\"] }\nreqwest = \"0.11\"\n\n[dev-dependencies]\ncriterion = \"0.5\"\n\n[profile.release]\nopt-level = 3\nlto = true\n\n[server]\nhost = \"0.0.0.0\"\nport = 8080\nworkers = 4\n\n[database]\nurl = \"postgres://localhost/mydb\"\nmax_connections = 10\ntimeout = 30\n",
+  "embed_source": "config.toml\n[package]\n[dependencies]\n[dev-dependencies]\n[profile.release]\n[server]\n[database]"
+}

@@ -1,0 +1,8 @@
+CNCP v1 1452
+{
+  "concept": "allocator.zig",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.928652+00:00",
+  "text": "const std = @import(\"std\");\nconst Allocator = std.mem.Allocator;\n\npub const PoolAllocator = struct {\n    backing: Allocator,\n    pool: []u8,\n    offset: usize,\n\n    pub fn init(backing: Allocator, size: usize) !PoolAllocator {\n        const pool = try backing.alloc(u8, size);\n        return PoolAllocator{\n            .backing = backing,\n            .pool = pool,\n            .offset = 0,\n        };\n    }\n\n    pub fn alloc(self: *PoolAllocator, size: usize) ?[]u8 {\n        if (self.offset + size > self.pool.len) return null;\n        const result = self.pool[self.offset .. self.offset + size];\n        self.offset += size;\n        return result;\n    }\n\n    pub fn reset(self: *PoolAllocator) void {\n        self.offset = 0;\n    }\n\n    pub fn deinit(self: *PoolAllocator) void {\n        self.backing.free(self.pool);\n    }\n};\n\npub fn createPool(size: usize) !PoolAllocator {\n    return PoolAllocator.init(std.heap.page_allocator, size);\n}\n\ntest \"pool allocator\" {\n    var pool = try createPool(1024);\n    defer pool.deinit();\n\n    const buf = pool.alloc(64) orelse unreachable;\n    try std.testing.expect(buf.len == 64);\n}\n",
+  "embed_source": "allocator.zig\nconst std\nconst Allocator\npub const PoolAllocator\npub fn createPool(size: usize) !PoolAllocator\ntest \"pool allocator\""
+}

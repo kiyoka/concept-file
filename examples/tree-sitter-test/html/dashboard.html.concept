@@ -1,0 +1,8 @@
+CNCP v1 1494
+{
+  "concept": "dashboard.html",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:41.012454+00:00",
+  "text": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Dashboard</title>\n  <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n  <header>\n    <nav>\n      <a href=\"/\">Home</a>\n      <a href=\"/dashboard\">Dashboard</a>\n      <a href=\"/settings\">Settings</a>\n    </nav>\n  </header>\n  <main>\n    <section id=\"overview\">\n      <h2>Overview</h2>\n      <table>\n        <thead><tr><th>Metric</th><th>Value</th></tr></thead>\n        <tbody></tbody>\n      </table>\n    </section>\n    <section id=\"charts\">\n      <article class=\"chart-panel\">\n        <h3>Revenue</h3>\n        <canvas id=\"revenue-chart\"></canvas>\n      </article>\n      <article class=\"chart-panel\">\n        <h3>Users</h3>\n        <canvas id=\"users-chart\"></canvas>\n      </article>\n    </section>\n    <aside id=\"notifications\">\n      <h3>Recent Activity</h3>\n      <ul id=\"activity-feed\"></ul>\n    </aside>\n  </main>\n  <footer>\n    <p>&copy; 2025 Dashboard App</p>\n  </footer>\n  <script src=\"app.js\"></script>\n</body>\n</html>\n",
+  "embed_source": "dashboard.html\n<head>\n  <title>\n<body>\n  <header>\n    <nav>\n  <main>\n    <section id=\"overview\">\n      <table>\n    <section id=\"charts\">\n      <article class=\"chart-panel\">\n      <article class=\"chart-panel\">\n    <aside id=\"notifications\">\n  <footer>"
+}

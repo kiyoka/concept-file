@@ -1,0 +1,8 @@
+CNCP v1 1090
+{
+  "concept": "Stack.hs",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:40.406866+00:00",
+  "text": "module Stack where\n\nimport Data.Maybe (isNothing)\n\ndata Stack a = Stack [a]\n\nempty :: Stack a\nempty = Stack []\n\npush :: a -> Stack a -> Stack a\npush x (Stack xs) = Stack (x : xs)\n\npop :: Stack a -> (Maybe a, Stack a)\npop (Stack []) = (Nothing, Stack [])\npop (Stack (x:xs)) = (Just x, Stack xs)\n\npeek :: Stack a -> Maybe a\npeek (Stack []) = Nothing\npeek (Stack (x:_)) = Just x\n\nsize :: Stack a -> Int\nsize (Stack xs) = length xs\n\nisEmpty :: Stack a -> Bool\nisEmpty (Stack xs) = null xs\n\nclass Container f where\n  insert :: a -> f a -> f a\n  remove :: f a -> (Maybe a, f a)\n\ninstance Container Stack where\n  insert = push\n  remove = pop\n",
+  "embed_source": "Stack.hs\nmodule Stack where\nimport Data.Maybe (isNothing)\ndata Stack a\nempty :: Stack a\npush :: a -> Stack a -> Stack a\npop :: Stack a -> (Maybe a, Stack a)\npeek :: Stack a -> Maybe a\nsize :: Stack a -> Int\nisEmpty :: Stack a -> Bool\nclass Container f\ninstance Container Stack"
+}

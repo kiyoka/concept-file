@@ -1,0 +1,8 @@
+CNCP v1 964
+{
+  "concept": "docker-compose.yaml",
+  "version": "1.0",
+  "created_at": "2026-03-18T19:33:41.248890+00:00",
+  "text": "version: \"3.8\"\n\nservices:\n  web:\n    build: .\n    ports:\n      - \"8080:8080\"\n    environment:\n      DATABASE_URL: postgres://db:5432/app\n      REDIS_URL: redis://cache:6379\n    depends_on:\n      - db\n      - cache\n\n  db:\n    image: postgres:15\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n    environment:\n      POSTGRES_DB: app\n      POSTGRES_USER: admin\n      POSTGRES_PASSWORD: secret\n\n  cache:\n    image: redis:7-alpine\n    ports:\n      - \"6379:6379\"\n\nvolumes:\n  pgdata:\n",
+  "embed_source": "docker-compose.yaml\nversion\nservices\n  web\n    build\n    ports\n    environment\n      DATABASE_URL\n      REDIS_URL\n    depends_on\n  db\n    image\n    volumes\n    environment\n      POSTGRES_DB\n      POSTGRES_USER\n      POSTGRES_PASSWORD\n  cache\n    image\n    ports\nvolumes\n  pgdata"
+}
