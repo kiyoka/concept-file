@@ -1,8 +1,8 @@
-CNCP v1 22726
+CNCP v1 22729
 {
-  "concept": "calculator",
+  "concept": "calculator.py",
   "version": "1.0",
-  "created_at": "2026-03-18T14:00:04.531833+00:00",
+  "created_at": "2026-03-18T19:43:15.733866+00:00",
   "text": "\"\"\"A simple calculator module.\"\"\"\n\n\nclass Calculator:\n    \"\"\"Basic arithmetic calculator.\"\"\"\n\n    def __init__(self):\n        self.history = []\n\n    def add(self, a: float, b: float) -> float:\n        \"\"\"Add two numbers.\"\"\"\n        result = a + b\n        self.history.append(f\"{a} + {b} = {result}\")\n        return result\n\n    def subtract(self, a: float, b: float) -> float:\n        \"\"\"Subtract b from a.\"\"\"\n        result = a - b\n        self.history.append(f\"{a} - {b} = {result}\")\n        return result\n\n    def clear_history(self):\n        \"\"\"Clear calculation history.\"\"\"\n        self.history = []\n",
   "embed_source": "calculator.py\nclass Calculator\n  \"Basic arithmetic calculator.\"\n  def __init__(self)\n  def add(self, a: float, b: float) -> float\n    \"Add two numbers.\"\n  def subtract(self, a: float, b: float) -> float\n    \"Subtract b from a.\"\n  def clear_history(self)\n    \"Clear calculation history.\"",
   "embedding": {
