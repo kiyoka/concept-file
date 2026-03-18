@@ -210,7 +210,12 @@ def main():
     for sf in source_files:
         concept_path = source_to_concept_path(concept_root, sf)
         if not concept_path or not concept_path.exists():
-            continue
+            # Fallback: check for .concept file alongside the source file
+            fallback = Path(str(sf) + ".concept")
+            if fallback.exists():
+                concept_path = fallback
+            else:
+                continue
         try:
             data = read_concept(str(concept_path))
             target_vec = data.get("embedding", {}).get("vector")
