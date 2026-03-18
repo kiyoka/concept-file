@@ -35,6 +35,7 @@ def main():
                         help="Embedding model (env: CONCEPT_EMBED_MODEL, default: text-embedding-3-small)")
     parser.add_argument("--language", help="BCP 47 language tag")
     parser.add_argument("--keywords", nargs="*", help="Keywords")
+    parser.add_argument("--source-file", help="Source file path (enables tree-sitter summarization for supported languages)")
     parser.add_argument("--source-url", help="Source URL for provenance")
     parser.add_argument("--api-base",
                         default=os.environ.get("CONCEPT_API_BASE"),
@@ -60,9 +61,17 @@ def main():
     if args.keywords:
         data["keywords"] = args.keywords
 
+    # Generate embed_source using tree-sitter if source file is specified
+    embed_source = None
+    if args.source_file:
+        from concept_file.summarizer import summarize
+        embed_source, _ = summarize(args.source_file, text)
+        data["embed_source"] = embed_source
+
     if not args.no_embed:
+        embed_text = embed_source if embed_source else text
         try:
-            vector = embed_openai(text, args.model, api_base=args.api_base)
+            vector = embed_openai(embed_text, args.model, api_base=args.api_base)
             data["embedding"] = {
                 "model": args.model,
                 "dim": len(vector),

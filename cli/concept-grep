@@ -161,12 +161,15 @@ def main():
                 text = sf.read_text(errors="replace")
                 if not text.strip():
                     continue
-                vector = embed_query(text, args.model, api_base=args.api_base)
+                from concept_file.summarizer import summarize
+                embed_source, _ = summarize(str(sf), text)
+                vector = embed_query(embed_source, args.model, api_base=args.api_base)
                 data = {
                     "concept": sf.name,
                     "version": "1.0",
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "text": text,
+                    "embed_source": embed_source,
                     "embedding": {
                         "model": args.model,
                         "dim": len(vector),
