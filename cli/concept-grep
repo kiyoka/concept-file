@@ -223,7 +223,7 @@ def main():
             print(f"Warning: {concept_path}: {e}", file=sys.stderr)
 
     matched.sort(key=lambda x: x[0], reverse=True)
-    unmatched.sort(key=lambda x: x[0], reverse=True)
+    unmatched.sort(key=lambda x: x[0])
 
     # Select results based on -v flag
     results = unmatched if args.invert_match else matched
