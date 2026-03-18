@@ -218,24 +218,35 @@ src/
 - `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
 - `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
 
-### concept-dist
+### concept-sim
 
-クエリの `.concept` ファイルから1つ以上のターゲットへのコサイン距離を計算します。結果は距離の近い順にソートされます。
+クエリの `.concept` ファイルから1つ以上のターゲットへのコサイン類似度を計算します。結果は類似度の高い順にソートされます。
 
 ```bash
-cli/concept-dist query.concept targets/*.concept
+cli/concept-sim query.concept targets/*.concept
 ```
 
 ```
-0.0000  User                 concepts/User.concept
-0.2463  Order                concepts/Order.concept
-0.3400  AuthService          concepts/AuthService.concept
-0.3955  Product              concepts/Product.concept
-0.4739  PaymentService       concepts/PaymentService.concept
-0.5815  ProductSearchService concepts/ProductSearchService.concept
+1.000  User                 concepts/User.concept
+0.754  Order                concepts/Order.concept
+0.660  AuthService          concepts/AuthService.concept
+0.605  Product              concepts/Product.concept
+0.526  PaymentService       concepts/PaymentService.concept
+0.419  ProductSearchService concepts/ProductSearchService.concept
 ```
 
-距離 0 = 同一、1 = 完全に無関係。
+`-s` オプションでスコアとしきい値を表示できます：
+
+```bash
+cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
+```
+
+```
+1.000 (>0.50)  User                 concepts/User.concept
+0.754 (>0.50)  Order                concepts/Order.concept
+```
+
+類似度 1.0 = 同一、0.0 = 完全に無関係。
 
 ### concept-plot
 
@@ -300,7 +311,7 @@ done
 「`User` に最も似ているクラスはどれ？」
 
 ```bash
-cli/concept-dist examples/java-project/concepts/User.concept examples/java-project/concepts/*.concept
+cli/concept-sim examples/java-project/concepts/User.concept examples/java-project/concepts/*.concept
 ```
 
 結果は `Order`（購入関係）と `AuthService`（認証関係）が `User` に最も近いことを示しており、コード上の実際のドメイン関係と一致しています。
@@ -445,7 +456,7 @@ concept-file/
 │   ├── concept-search       — .concept ファイルのセマンティック検索
 │   ├── concept-grep         — ソースファイルのセマンティック grep
 │   ├── concept-show         — 人間が読める形式で表示
-│   ├── concept-dist         — 距離計算
+│   ├── concept-sim          — 類似度計算
 │   └── concept-plot         — UMAP 2D/3D 散布図で可視化
 └── examples/
     ├── java-project/

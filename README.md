@@ -220,24 +220,35 @@ Options:
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
 
-### concept-dist
+### concept-sim
 
-Calculate cosine distance from a query `.concept` file to one or more targets. Results are sorted by distance (closest first).
+Calculate cosine similarity from a query `.concept` file to one or more targets. Results are sorted by similarity (most similar first).
 
 ```bash
-cli/concept-dist query.concept targets/*.concept
+cli/concept-sim query.concept targets/*.concept
 ```
 
 ```
-0.0000  User                 concepts/User.concept
-0.2463  Order                concepts/Order.concept
-0.3400  AuthService          concepts/AuthService.concept
-0.3955  Product              concepts/Product.concept
-0.4739  PaymentService       concepts/PaymentService.concept
-0.5815  ProductSearchService concepts/ProductSearchService.concept
+1.000  User                 concepts/User.concept
+0.754  Order                concepts/Order.concept
+0.660  AuthService          concepts/AuthService.concept
+0.605  Product              concepts/Product.concept
+0.526  PaymentService       concepts/PaymentService.concept
+0.419  ProductSearchService concepts/ProductSearchService.concept
 ```
 
-Distance 0 = identical, 1 = completely unrelated.
+Use `-s` to show scores with threshold:
+
+```bash
+cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
+```
+
+```
+1.000 (>0.50)  User                 concepts/User.concept
+0.754 (>0.50)  Order                concepts/Order.concept
+```
+
+Similarity 1.0 = identical, 0.0 = completely unrelated.
 
 ### concept-plot
 
@@ -424,7 +435,7 @@ concept-file/
 │   ├── concept-search       — Semantic search over .concept files
 │   ├── concept-grep         — Semantic grep over source files
 │   ├── concept-show         — Human-readable display
-│   ├── concept-dist         — Distance calculation
+│   ├── concept-sim          — Similarity calculation
 │   └── concept-plot         — UMAP 2D/3D scatter plot visualization
 └── examples/
     ├── java-project/
