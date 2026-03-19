@@ -3,9 +3,12 @@
 
 import argparse
 import os
+import signal
 import sys
 import tempfile
 from pathlib import Path
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 # Use a per-process numba cache directory to avoid lock conflicts in parallel execution
 os.environ["NUMBA_CACHE_DIR"] = os.path.join(tempfile.gettempdir(), f"numba_cache_{os.getpid()}")

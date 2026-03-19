@@ -123,6 +123,7 @@ Options:
 - `--model` — Embedding model (default: `text-embedding-3-small`)
 - `--language` — BCP 47 language tag (e.g. `en`, `ja`)
 - `--keywords` — Keywords / tags
+- `--source-file` — Source file path (enables tree-sitter summarization for supported languages)
 - `--source-url` — Source URL for provenance
 - `--no-embed` — Skip embedding generation
 
@@ -225,9 +226,42 @@ Options:
 - `-v, --invert-match` — Show files below threshold (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `--threshold` — Minimum similarity score (default: 0.5)
-- `--index` — Generate `.concept` files for the specified source files
+- `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages)
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
+
+#### Tree-sitter supported languages
+
+When indexing source files with `concept-grep --index` or `concept-embed --source-file`, tree-sitter is used to extract a structural summary (classes, functions, type signatures, etc.) for better embedding quality. Unsupported file types fall back to raw text.
+
+| Language | Extensions |
+|----------|-----------|
+| Java | `.java` |
+| Python | `.py` |
+| JavaScript | `.js`, `.mjs`, `.cjs`, `.jsx` |
+| TypeScript | `.ts`, `.tsx` |
+| Go | `.go` |
+| Rust | `.rs` |
+| C | `.c`, `.h` |
+| C++ | `.cpp`, `.cxx`, `.cc`, `.hpp`, `.hxx`, `.hh` |
+| C# | `.cs` |
+| Ruby | `.rb` |
+| PHP | `.php` |
+| Swift | `.swift` |
+| Kotlin | `.kt`, `.kts` |
+| Scala | `.scala` |
+| Haskell | `.hs` |
+| Elixir | `.ex`, `.exs` |
+| Lua | `.lua` |
+| Bash | `.sh`, `.bash` |
+| Objective-C | `.m` |
+| OCaml | `.ml`, `.mli` |
+| Zig | `.zig` |
+| HTML | `.html`, `.htm` |
+| CSS | `.css` |
+| JSON | `.json` |
+| YAML | `.yaml`, `.yml` |
+| TOML | `.toml` |
 
 ### concept-sim
 

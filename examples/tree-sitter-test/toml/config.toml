@@ -1,0 +1,27 @@
+[package]
+name = "my-app"
+version = "0.1.0"
+edition = "2021"
+authors = ["Alice <alice@example.com>"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+reqwest = "0.11"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = true
+
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 4
+
+[database]
+url = "postgres://localhost/mydb"
+max_connections = 10
+timeout = 30

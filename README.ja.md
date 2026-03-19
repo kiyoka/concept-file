@@ -121,6 +121,7 @@ cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
 - `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`）
 - `--language` — BCP 47 言語タグ（例: `en`, `ja`）
 - `--keywords` — キーワード / タグ
+- `--source-file` — ソースファイルパス（対応言語では tree-sitter による要約を使用）
 - `--source-url` — 来歴用のソースURL
 - `--no-embed` — 埋め込み生成をスキップ
 
@@ -223,9 +224,42 @@ src/
 - `-v, --invert-match` — 閾値以下のファイルを表示（逆マッチ、`grep -v` と同様）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
 - `--threshold` — 最低類似度スコア（デフォルト: 0.5）
-- `--index` — 指定したソースファイルの `.concept` ファイルを生成
+- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）
 - `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
 - `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
+
+#### Tree-sitter 対応言語
+
+`concept-grep --index` や `concept-embed --source-file` でソースファイルをインデックス化する際、tree-sitter を使用して構造的な要約（クラス、関数、型シグネチャなど）を抽出し、より高品質な埋め込みを生成します。非対応のファイルは元のテキストをそのまま使用します。
+
+| 言語 | 拡張子 |
+|------|--------|
+| Java | `.java` |
+| Python | `.py` |
+| JavaScript | `.js`, `.mjs`, `.cjs`, `.jsx` |
+| TypeScript | `.ts`, `.tsx` |
+| Go | `.go` |
+| Rust | `.rs` |
+| C | `.c`, `.h` |
+| C++ | `.cpp`, `.cxx`, `.cc`, `.hpp`, `.hxx`, `.hh` |
+| C# | `.cs` |
+| Ruby | `.rb` |
+| PHP | `.php` |
+| Swift | `.swift` |
+| Kotlin | `.kt`, `.kts` |
+| Scala | `.scala` |
+| Haskell | `.hs` |
+| Elixir | `.ex`, `.exs` |
+| Lua | `.lua` |
+| Bash | `.sh`, `.bash` |
+| Objective-C | `.m` |
+| OCaml | `.ml`, `.mli` |
+| Zig | `.zig` |
+| HTML | `.html`, `.htm` |
+| CSS | `.css` |
+| JSON | `.json` |
+| YAML | `.yaml`, `.yml` |
+| TOML | `.toml` |
 
 ### concept-sim
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/settings">Settings</a>
+    </nav>
+  </header>
+  <main>
+    <section id="overview">
+      <h2>Overview</h2>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+    <section id="charts">
+      <article class="chart-panel">
+        <h3>Revenue</h3>
+        <canvas id="revenue-chart"></canvas>
+      </article>
+      <article class="chart-panel">
+        <h3>Users</h3>
+        <canvas id="users-chart"></canvas>
+      </article>
+    </section>
+    <aside id="notifications">
+      <h3>Recent Activity</h3>
+      <ul id="activity-feed"></ul>
+    </aside>
+  </main>
+  <footer>
+    <p>&copy; 2025 Dashboard App</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
