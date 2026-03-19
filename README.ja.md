@@ -73,15 +73,25 @@ export OPENAI_API_KEY="sk-..."
 [LM Studio](https://lmstudio.ai/) を使えば、OpenAI APIの代わりにローカルの埋め込みモデルを利用できます。APIキーは不要です。
 
 1. LM Studioをインストールして起動
-2. 埋め込みモデルをダウンロード（例: `granite-embedding-278m-multilingual`）
+2. 埋め込みモデルをダウンロード（下表参照）
 3. **Developer** タブでモデルをロード
 4. ローカルAPIサーバーが `http://localhost:1234/v1` で起動
+
+#### 推奨埋め込みモデル
+
+| モデル | パラメータ数 | 次元数 | MTEB多言語スコア | 特徴 |
+|--------|------------|--------|-----------------|------|
+| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | 軽量・高速。手軽に試すのに最適 |
+| `Qwen3-Embedding-0.6B` | 0.6B | 1024 | 64.33 | 品質と速度のバランスが良い |
+| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | 最高品質（MTEB多言語1位）。VRAMが多く必要 |
+
+すべてのモデルが多言語入力（日本語含む）に対応しています。MTEB多言語スコアは [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard) より。
 
 環境変数を設定します:
 
 ```bash
 export CONCEPT_API_BASE="http://localhost:1234/v1"
-export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"
+export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # または Qwen3-Embedding-0.6B, Qwen3-Embedding-8B
 ```
 
 あとはCLIツールをそのまま使えます — 自動的にローカルモデルが使われます:

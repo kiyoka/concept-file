@@ -75,15 +75,25 @@ export OPENAI_API_KEY="sk-..."
 You can use a local embedding model via [LM Studio](https://lmstudio.ai/) instead of the OpenAI API. No API key required.
 
 1. Install and launch LM Studio
-2. Download an embedding model (e.g. `granite-embedding-278m-multilingual`)
+2. Download an embedding model (see table below)
 3. Go to the **Developer** tab and load the model
 4. The local API server runs at `http://localhost:1234/v1`
+
+#### Recommended Embedding Models
+
+| Model | Parameters | Dimensions | MTEB Multilingual | Characteristics |
+|-------|-----------|------------|-------------------|-----------------|
+| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | Lightweight, fast. Good for quick experimentation |
+| `Qwen3-Embedding-0.6B` | 0.6B | 1024 | 64.33 | Good balance of quality and speed |
+| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | Highest quality (#1 on MTEB multilingual). Requires more VRAM |
+
+All models support multilingual input (including Japanese). MTEB Multilingual scores are from the [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard).
 
 Set the environment variables:
 
 ```bash
 export CONCEPT_API_BASE="http://localhost:1234/v1"
-export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"
+export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # or Qwen3-Embedding-0.6B, Qwen3-Embedding-8B
 ```
 
 Then use the CLI tools as usual — they will automatically use the local model:
