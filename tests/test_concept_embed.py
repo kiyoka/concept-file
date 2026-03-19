@@ -269,6 +269,33 @@ class TestTreeSitterIntegration:
         assert data["text"] == source_code
         assert data["embed_source"] != data["text"]
 
+    def test_source_file_reads_file_not_text_arg(self, tmp_path):
+        """--source-file should read the file directly for summarization,
+        not use --text content."""
+        src = tmp_path / "User.java"
+        src.write_text(
+            "public class User {\n"
+            "    private String name;\n"
+            "    public String getName() { return name; }\n"
+            "}\n"
+        )
+        out = tmp_path / "User.java.concept"
+        result = run_embed(
+            "--name", "User",
+            "--text", "some unrelated text",
+            "--source-file", str(src),
+            "--no-embed",
+            "-o", str(out),
+        )
+        assert result.returncode == 0
+        data, _ = read_concept_file(out)
+        # text should be the --text argument
+        assert data["text"] == "some unrelated text"
+        # embed_source should be from the actual file, not from --text
+        assert "class User" in data["embed_source"]
+        assert "getName" in data["embed_source"]
+        assert "some unrelated text" not in data["embed_source"]
+
 
 class TestExistingExamples:
     """Test against existing example .concept files."""
