@@ -197,7 +197,10 @@ concept-grep -r "決済処理" src/
 # スコア表示
 concept-grep -s "サーバーへのデータ送信" src/*.java
 
-# 逆マッチ: 閾値以下のファイルを表示
+# 上位20%を表示
+concept-grep -p 20 -r "データバリデーション" src/
+
+# 逆マッチ: 類似度が低いファイルを表示
 concept-grep -v "サーバーへのデータ送信" src/*.java
 
 # パイプと組み合わせ
@@ -231,8 +234,9 @@ src/
 - `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
 - `-s, --score` — 類似度スコアを表示
 - `-g, --graph` — 類似度をバーグラフで表示
-- `-v, --invert-match` — 閾値以下のファイルを表示（逆マッチ、`grep -v` と同様）
+- `-v, --invert-match` — 類似度が低いファイルを表示（逆マッチ、`grep -v` と同様）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
+- `-p, --top-percent` — 上位N%を表示（デフォルト: 10）
 - `--threshold` — 最低類似度スコア（デフォルト: 0.5）
 - `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュ比較）はスキップ
 - `--force` — `.git` がなくてもカレントディレクトリに `.concept/` を強制作成

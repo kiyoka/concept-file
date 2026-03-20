@@ -136,11 +136,11 @@ def main():
     parser.add_argument("-g", "--graph", action="store_true",
                         help="Show similarity as a bar graph")
     parser.add_argument("-v", "--invert-match", action="store_true",
-                        help="Show files below threshold (invert match)")
+                        help="Show least similar files (invert match)")
     parser.add_argument("-n", "--top", type=int, default=0,
                         help="Show only top N results (default: all)")
-    parser.add_argument("--threshold", type=float, default=0.5,
-                        help="Minimum similarity score (default: 0.5)")
+    parser.add_argument("-p", "--top-percent", type=float, default=10,
+                        help="Show top N%% of results by similarity (default: 10)")
     parser.add_argument("--model",
                         default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
                         help="Embedding model (env: CONCEPT_EMBED_MODEL)")
@@ -257,8 +257,9 @@ def main():
         print(f"Error generating query embedding: {e}", file=sys.stderr)
         sys.exit(1)
 
-    matched = []
-    unmatched = []
+    import math
+
+    all_results = []
     for sf in source_files:
         concept_path = source_to_concept_path(concept_root, sf)
         if not concept_path or not concept_path.exists():
@@ -274,21 +275,22 @@ def main():
             if not target_vec:
                 continue
             sim = cosine_similarity(query_vec, target_vec)
-            if sim >= args.threshold:
-                matched.append((sim, sf))
-            else:
-                unmatched.append((sim, sf))
+            all_results.append((sim, sf))
         except (ValueError, FileNotFoundError) as e:
             print(f"Warning: {concept_path}: {e}", file=sys.stderr)
 
-    matched.sort(key=lambda x: x[0], reverse=True)
-    unmatched.sort(key=lambda x: x[0])
+    # Sort by similarity: descending for normal, ascending for invert
+    if args.invert_match:
+        all_results.sort(key=lambda x: x[0])
+    else:
+        all_results.sort(key=lambda x: x[0], reverse=True)
 
-    # Select results based on -v flag
-    results = unmatched if args.invert_match else matched
-
+    # Apply top N or top percentage
     if args.top > 0:
-        results = results[: args.top]
+        results = all_results[: args.top]
+    else:
+        count = max(1, math.ceil(len(all_results) * args.top_percent / 100))
+        results = all_results[: count]
 
     if args.graph and results:
         sims = [s for s, _ in results]
@@ -296,16 +298,15 @@ def main():
         sim_range = max_sim - min_sim
 
     for sim, sf in results:
-        op = "<" if args.invert_match else ">"
         if args.graph:
             if sim_range == 0:
                 bar_width = 10
             else:
                 bar_width = max(1, round((sim - min_sim) / sim_range * 10))
             bar = "█" * bar_width
-            print(f"{bar:<10}({op}{args.threshold:.2f})\t{sf}")
+            print(f"{bar:<10}({sim:.2f})\t{sf}")
         elif args.score:
-            print(f"{sim:.3f} ({op}{args.threshold:.2f})\t{sf}")
+            print(f"{sim:.3f}\t{sf}")
         else:
             print(sf)
 
