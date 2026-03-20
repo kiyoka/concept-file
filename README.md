@@ -199,7 +199,10 @@ concept-grep -r "payment processing" src/
 # Show scores
 concept-grep -s "data transmission to the server" src/*.java
 
-# Invert match: show files below threshold
+# Show top 20% of results
+concept-grep -p 20 -r "data validation" src/
+
+# Invert match: show least similar files
 concept-grep -v "data transmission to the server" src/*.java
 
 # Pipe-friendly
@@ -233,9 +236,9 @@ Options:
 - `-r, --recursive` — Recurse into directories (skips `.git/`, `.concept/`, `.venv/`, `node_modules/`)
 - `-s, --score` — Show similarity scores
 - `-g, --graph` — Show similarity as a bar graph
-- `-v, --invert-match` — Show files below threshold (invert match, like `grep -v`)
+- `-v, --invert-match` — Show least similar files (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
-- `--threshold` — Minimum similarity score (default: 0.5)
+- `-p, --top-percent` — Show top N% of results by similarity (default: 10)
 - `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages)
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
