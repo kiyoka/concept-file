@@ -69,8 +69,11 @@ def main():
     if args.source_file:
         from concept_file.summarizer import summarize
         source_text = Path(args.source_file).read_text(encoding="utf-8")
-        embed_source, _ = summarize(args.source_file, source_text)
-        data["embed_source"] = embed_source
+        embed_source, used_summarizer = summarize(args.source_file, source_text)
+        if used_summarizer:
+            data["embed_source"] = embed_source
+        else:
+            data["embed_source"] = None
 
     if not args.no_embed:
         embed_text = embed_source if embed_source else text

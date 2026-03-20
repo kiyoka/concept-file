@@ -249,8 +249,9 @@ class TestTreeSitterIntegration:
         )
         assert result.returncode == 0
         data, _ = read_concept_file(out)
-        # Fallback: embed_source should contain the filename and text
+        # Fallback: embed_source should be null
         assert "embed_source" in data
+        assert data["embed_source"] is None
 
     def test_text_preserved_with_source_file(self, tmp_path):
         src = tmp_path / "calc.py"

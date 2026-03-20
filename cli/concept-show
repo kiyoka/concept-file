@@ -123,7 +123,10 @@ def main():
             print(f"  {rel['type']:>10} -> {rel['ref']}")
 
     embed_source = data.get("embed_source")
-    if embed_source:
+    if "embed_source" in data:
+        if embed_source is None:
+            # Reconstruct from concept name + text
+            embed_source = data.get("concept", "") + "\n" + data.get("text", "")
         print()
         print("--- Embed Source ---")
         print(embed_source)
