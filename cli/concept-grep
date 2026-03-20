@@ -2,6 +2,7 @@
 """Semantic grep — find source files by meaning using .concept index."""
 
 import argparse
+import hashlib
 import os
 import signal
 import sys
@@ -16,6 +17,19 @@ from concept_file import read_concept
 from concept_file.search import cosine_similarity
 
 
+def find_git_root(start=None):
+    """Find .git/ directory by walking up from start (default: cwd)."""
+    p = Path(start) if start else Path.cwd()
+    p = p.resolve()
+    while True:
+        if (p / ".git").exists():
+            return p
+        if p.parent == p:
+            break
+        p = p.parent
+    return None
+
+
 def find_concept_root(start=None):
     """Find .concept/ directory by walking up from start (default: cwd)."""
     p = Path(start) if start else Path.cwd()
@@ -28,6 +42,13 @@ def find_concept_root(start=None):
             break
         p = p.parent
     return None
+
+
+def source_hash(path):
+    """Compute SHA-256 hash of a file's content."""
+    h = hashlib.sha256()
+    h.update(Path(path).read_bytes())
+    return "sha256:" + h.hexdigest()
 
 
 def source_to_concept_path(concept_root, source_path):
@@ -128,6 +149,8 @@ def main():
                         help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
     parser.add_argument("--index", action="store_true",
                         help="Generate .concept files for the specified source files")
+    parser.add_argument("--force", action="store_true",
+                        help="Force creating .concept/ in current directory even without .git")
     args = parser.parse_args()
 
     concept_root = find_concept_root()
@@ -143,23 +166,47 @@ def main():
             index_paths = ["."]
 
         if not concept_root:
-            concept_root = Path.cwd() / ".concept"
+            git_root = find_git_root()
+            if git_root:
+                concept_root = git_root / ".concept"
+            elif args.force:
+                concept_root = Path.cwd() / ".concept"
+            else:
+                cwd = Path.cwd().resolve()
+                print(f"Error: .git not found (searched from {cwd} to /). "
+                      "Use --force to create .concept in the current directory.",
+                      file=sys.stderr)
+                sys.exit(1)
             concept_root.mkdir(exist_ok=True)
-            print(f"Created {concept_root}", file=sys.stderr)
+
+        print(f"Using: {concept_root.resolve()}", file=sys.stderr)
 
         source_files = collect_source_files(index_paths, args.recursive)
         if not source_files:
             print("No source files found.", file=sys.stderr)
             sys.exit(1)
 
-        from concept_file import write_concept
+        from concept_file import read_concept as read_existing, write_concept
         from datetime import datetime, timezone
 
         count = 0
+        skipped = 0
         for sf in source_files:
             concept_path = source_to_concept_path(concept_root, sf)
             if not concept_path:
                 continue
+            # Check hash to skip unchanged files
+            current_hash = source_hash(sf)
+            if concept_path.exists():
+                try:
+                    existing = read_existing(str(concept_path))
+                    existing_hash = existing.get("provenance", {}).get("source_hash")
+                    if existing_hash == current_hash:
+                        skipped += 1
+                        print(f"Skipped (unchanged): {sf}", file=sys.stderr)
+                        continue
+                except (ValueError, FileNotFoundError):
+                    pass
             concept_path.parent.mkdir(parents=True, exist_ok=True)
             try:
                 text = sf.read_text(errors="replace")
@@ -181,6 +228,7 @@ def main():
                     },
                     "provenance": {
                         "source_file": str(sf),
+                        "source_hash": current_hash,
                         "pipeline": "concept-grep --index",
                     },
                 }
@@ -189,7 +237,7 @@ def main():
                 print(f"Indexed: {sf}", file=sys.stderr)
             except Exception as e:
                 print(f"Warning: {sf}: {e}", file=sys.stderr)
-        print(f"Indexed {count} files.", file=sys.stderr)
+        print(f"Indexed {count} files. (skipped {skipped} unchanged)", file=sys.stderr)
         return
 
     # Search mode

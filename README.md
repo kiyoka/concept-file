@@ -239,7 +239,8 @@ Options:
 - `-v, --invert-match` — Show least similar files (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `-p, --top-percent` — Show top N% of results by similarity (default: 10)
-- `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages)
+- `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages). The `.concept/` directory is created next to `.git/`. Unchanged files (by SHA-256 hash) are skipped.
+- `--force` — Force creating `.concept/` in the current directory even without `.git`
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
 
