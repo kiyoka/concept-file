@@ -213,14 +213,14 @@ def main():
                 if not text.strip():
                     continue
                 from concept_file.summarizer import summarize
-                embed_source, _ = summarize(str(sf), text)
+                embed_source, used_summarizer = summarize(str(sf), text)
                 vector = embed_query(embed_source, args.model, api_base=args.api_base)
                 data = {
                     "concept": sf.name,
                     "version": "1.0",
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "text": text,
-                    "embed_source": embed_source,
+                    "embed_source": embed_source if used_summarizer else None,
                     "embedding": {
                         "model": args.model,
                         "dim": len(vector),
