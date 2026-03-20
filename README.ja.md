@@ -234,7 +234,8 @@ src/
 - `-v, --invert-match` — 閾値以下のファイルを表示（逆マッチ、`grep -v` と同様）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
 - `--threshold` — 最低類似度スコア（デフォルト: 0.5）
-- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）
+- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュ比較）はスキップ
+- `--force` — `.git` がなくてもカレントディレクトリに `.concept/` を強制作成
 - `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
 - `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
 
