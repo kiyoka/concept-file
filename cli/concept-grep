@@ -200,6 +200,7 @@ def main():
                     existing_hash = existing.get("provenance", {}).get("source_hash")
                     if existing_hash == current_hash:
                         skipped += 1
+                        print(f"Skipped (unchanged): {sf}", file=sys.stderr)
                         continue
                 except (ValueError, FileNotFoundError):
                     pass
