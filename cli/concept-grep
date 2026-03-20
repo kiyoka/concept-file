@@ -172,7 +172,9 @@ def main():
             elif args.force:
                 concept_root = Path.cwd() / ".concept"
             else:
-                print("Error: .git not found. Use --force to create .concept in the current directory.",
+                cwd = Path.cwd().resolve()
+                print(f"Error: .git not found (searched from {cwd} to /). "
+                      "Use --force to create .concept in the current directory.",
                       file=sys.stderr)
                 sys.exit(1)
             concept_root.mkdir(exist_ok=True)
