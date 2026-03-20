@@ -178,7 +178,8 @@ def main():
                       file=sys.stderr)
                 sys.exit(1)
             concept_root.mkdir(exist_ok=True)
-            print(f"Created {concept_root}", file=sys.stderr)
+
+        print(f"Using: {concept_root.resolve()}", file=sys.stderr)
 
         source_files = collect_source_files(index_paths, args.recursive)
         if not source_files:
