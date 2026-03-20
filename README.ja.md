@@ -147,14 +147,25 @@ cli/concept-show output.concept
 Concept:  User
 Version:  1.0
 Created:  2026-03-14T13:46:11.223280+00:00
-Language: en
 Embedding: 1536-dim (text-embedding-3-small)
 Pipeline: embed
+
+--- Embed Source ---
+User.java
+package com.example.shop.model
+class User
+  field email: String
+  method verifyPassword(rawPassword: String): boolean
+  ...
 
 --- Text ---
 package com.example.shop.model;
 ...
 ```
+
+オプション:
+- `-s, --summary` — embed_sourceの要約のみ表示（全文テキストを省略）
+- `--json` — 生JSONを出力
 
 `--json` で生のJSONボディを出力できます。
 

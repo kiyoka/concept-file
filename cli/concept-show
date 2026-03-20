@@ -17,6 +17,8 @@ def main():
     parser = argparse.ArgumentParser(description="Show contents of a .concept file")
     parser.add_argument("file", help="Path to .concept file")
     parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    parser.add_argument("-s", "--summary", action="store_true",
+                        help="Show only embed_source summary (omit full text)")
     args = parser.parse_args()
 
     try:
@@ -63,11 +65,18 @@ def main():
         for rel in data["relations"]:
             print(f"  {rel['type']:>10} -> {rel['ref']}")
 
-    print()
-    text = data.get("text", "")
-    if text:
-        print("--- Text ---")
-        print(text)
+    embed_source = data.get("embed_source")
+    if embed_source:
+        print()
+        print("--- Embed Source ---")
+        print(embed_source)
+
+    if not args.summary:
+        text = data.get("text", "")
+        if text:
+            print()
+            print("--- Text ---")
+            print(text)
 
 
 if __name__ == "__main__":
