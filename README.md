@@ -64,15 +64,9 @@ export PATH="$PWD/cli:$PATH"
 
 You can add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) to make it permanent.
 
-### Using OpenAI API
+### Using a Local LLM (LM Studio) — Recommended
 
-```bash
-export OPENAI_API_KEY="sk-..."
-```
-
-### Using a Local LLM (LM Studio)
-
-You can use a local embedding model via [LM Studio](https://lmstudio.ai/) instead of the OpenAI API. No API key required.
+You can use a local embedding model via [LM Studio](https://lmstudio.ai/). No API key required, and embedding is free — ideal for indexing large codebases.
 
 1. Install and launch LM Studio
 2. Download an embedding model (see table below)
@@ -99,99 +93,14 @@ export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # or Qwen3-Emb
 Then use the CLI tools as usual — they will automatically use the local model:
 
 ```bash
-concept-embed --name "My Concept" --text "Some text" -o output.concept
-```
+# Index source files
+concept-grep --index -r src/
 
-You can also specify these per-command:
-
-```bash
-concept-embed --api-base http://localhost:1234/v1 --model granite-embedding-278m-multilingual \
-  --name "My Concept" --text "Some text" -o output.concept
+# Search by meaning
+concept-grep -r "user authentication" src/
 ```
 
 ## CLI Tools
-
-### concept-embed
-
-Generate a `.concept` file from text with an embedding vector.
-
-```bash
-# From a command-line argument
-cli/concept-embed --name "My Concept" --text "Some text to embed" -o output.concept
-
-# From stdin
-echo "Some text to embed" | cli/concept-embed --name "My Concept" -o output.concept
-
-# From a source file
-cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
-```
-
-Options:
-- `--name` — Concept name (required)
-- `--text` — Text content (reads stdin if omitted)
-- `-o, --output` — Output file path (required)
-- `--model` — Embedding model (default: `text-embedding-3-small`)
-- `--language` — BCP 47 language tag (e.g. `en`, `ja`)
-- `--keywords` — Keywords / tags
-- `--source-file` — Source file path (enables tree-sitter summarization for supported languages)
-- `--source-url` — Source URL for provenance
-- `--no-embed` — Skip embedding generation
-
-### concept-show
-
-Display the contents of a `.concept` file in human-readable form.
-
-```bash
-cli/concept-show output.concept
-```
-
-```
-Concept:  User
-Version:  1.0
-Created:  2026-03-14T13:46:11.223280+00:00
-Embedding: 1536-dim (text-embedding-3-small)
-Pipeline: embed
-
---- Embed Source ---
-User.java
-package com.example.shop.model
-class User
-  field email: String
-  method verifyPassword(rawPassword: String): boolean
-  ...
-
---- Text ---
-package com.example.shop.model;
-...
-```
-
-Options:
-- `-s, --summary` — Show only embed_source summary (omit full text)
-- `--json` — Output raw JSON
-
-Use `--json` to output the raw JSON body.
-
-### concept-search
-
-Semantic search over `.concept` files using a natural language query. Output is file paths only by default (Unix-friendly).
-
-```bash
-# Search .concept files
-concept-search "iOS Safari browser bug" concepts/*.concept
-
-# Show scores
-concept-search -s "TypeScript type error" concepts/*.concept
-
-# Top 5 results only
-concept-search -n 5 "hydration problem" concepts/*.concept
-```
-
-Options:
-- `-s, --score` — Show similarity scores
-- `-n, --top` — Show only top N results (default: all)
-- `--threshold` — Minimum similarity score (default: 0.5)
-- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
-- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
 
 ### concept-grep
 
@@ -287,6 +196,88 @@ When indexing source files with `concept-grep --index` or `concept-embed --sourc
 | JSON | `.json` |
 | YAML | `.yaml`, `.yml` |
 | TOML | `.toml` |
+
+### concept-search
+
+Semantic search over `.concept` files using a natural language query. Output is file paths only by default (Unix-friendly).
+
+```bash
+# Search .concept files
+concept-search "iOS Safari browser bug" concepts/*.concept
+
+# Show scores
+concept-search -s "TypeScript type error" concepts/*.concept
+
+# Top 5 results only
+concept-search -n 5 "hydration problem" concepts/*.concept
+```
+
+Options:
+- `-s, --score` — Show similarity scores
+- `-n, --top` — Show only top N results (default: all)
+- `--threshold` — Minimum similarity score (default: 0.5)
+- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
+- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
+
+### concept-embed
+
+Generate a `.concept` file from text with an embedding vector.
+
+```bash
+# From a command-line argument
+cli/concept-embed --name "My Concept" --text "Some text to embed" -o output.concept
+
+# From stdin
+echo "Some text to embed" | cli/concept-embed --name "My Concept" -o output.concept
+
+# From a source file
+cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
+```
+
+Options:
+- `--name` — Concept name (required)
+- `--text` — Text content (reads stdin if omitted)
+- `-o, --output` — Output file path (required)
+- `--model` — Embedding model (default: `text-embedding-3-small`)
+- `--language` — BCP 47 language tag (e.g. `en`, `ja`)
+- `--keywords` — Keywords / tags
+- `--source-file` — Source file path (enables tree-sitter summarization for supported languages)
+- `--source-url` — Source URL for provenance
+- `--no-embed` — Skip embedding generation
+
+### concept-show
+
+Display the contents of a `.concept` file in human-readable form.
+
+```bash
+cli/concept-show output.concept
+```
+
+```
+Concept:  User
+Version:  1.0
+Created:  2026-03-14T13:46:11.223280+00:00
+Embedding: 1536-dim (text-embedding-3-small)
+Pipeline: embed
+
+--- Embed Source ---
+User.java
+package com.example.shop.model
+class User
+  field email: String
+  method verifyPassword(rawPassword: String): boolean
+  ...
+
+--- Text ---
+package com.example.shop.model;
+...
+```
+
+Options:
+- `-s, --summary` — Show only embed_source summary (omit full text)
+- `--json` — Output raw JSON
+
+Use `--json` to output the raw JSON body.
 
 ### concept-sim
 
@@ -514,6 +505,14 @@ concept-file/
     │   └── concepts/        — Generated .concept files
     └── vuejs-issues/
         └── concepts/        — vuejs/core GitHub issues
+```
+
+## Using OpenAI API
+
+You can also use the OpenAI API instead of a local LLM:
+
+```bash
+export OPENAI_API_KEY="sk-..."
 ```
 
 ## License

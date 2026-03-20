@@ -62,15 +62,9 @@ export PATH="$PWD/cli:$PATH"
 
 シェルの設定ファイル（`~/.bashrc`, `~/.zshrc` 等）に追記すると永続化できます。
 
-### OpenAI APIを使う場合
+### ローカルLLMを使う場合（LM Studio） — 推奨
 
-```bash
-export OPENAI_API_KEY="sk-..."
-```
-
-### ローカルLLMを使う場合（LM Studio）
-
-[LM Studio](https://lmstudio.ai/) を使えば、OpenAI APIの代わりにローカルの埋め込みモデルを利用できます。APIキーは不要です。
+[LM Studio](https://lmstudio.ai/) を使えば、ローカルの埋め込みモデルを無料で利用できます。APIキーは不要で、大量のファイルをインデックス化する際にコストがかかりません。
 
 1. LM Studioをインストールして起動
 2. 埋め込みモデルをダウンロード（下表参照）
@@ -97,17 +91,131 @@ export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # または Qw
 あとはCLIツールをそのまま使えます — 自動的にローカルモデルが使われます:
 
 ```bash
-concept-embed --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
-```
+# ソースファイルをインデックス化
+concept-grep --index -r src/
 
-コマンドごとに指定することもできます:
-
-```bash
-concept-embed --api-base http://localhost:1234/v1 --model granite-embedding-278m-multilingual \
-  --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
+# 意味でコードを検索
+concept-grep -r "ユーザー認証" src/
 ```
 
 ## CLI ツール
+
+### concept-grep
+
+セマンティック grep — ソースファイルを意味で検索します。`.concept/` ディレクトリの集中インデックス、またはソースファイルと同階層の `.concept` ファイルを使用します。
+
+```bash
+# まずソースファイルをインデックス化
+concept-grep --index -r src/
+
+# 意味で検索（出力はファイルパスのみ）
+concept-grep "ユーザー認証" src/*.java
+
+# 再帰検索
+concept-grep -r "決済処理" src/
+
+# スコア表示
+concept-grep -s "サーバーへのデータ送信" src/*.java
+
+# 上位20%を表示
+concept-grep -p 20 -r "データバリデーション" src/
+
+# 逆マッチ: 類似度が低いファイルを表示
+concept-grep -v "サーバーへのデータ送信" src/*.java
+
+# パイプと組み合わせ
+concept-grep -r "エラーハンドリング" src/ | xargs cat
+```
+
+インデックスの検索順序:
+
+1. `.concept/` ディレクトリ（例: `.concept/src/main.java.concept`）
+2. ソースファイルと同階層（例: `src/main.java.concept`）— フォールバック
+
+```text
+# 集中インデックス
+.concept/
+├── src/
+│   ├── main.java.concept
+│   └── client.java.concept
+src/
+├── main.java
+└── client.java
+
+# または同階層レイアウト
+src/
+├── main.java
+├── main.java.concept
+├── client.java
+└── client.java.concept
+```
+
+オプション:
+- `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
+- `-s, --score` — 類似度スコアを表示
+- `-g, --graph` — 類似度をバーグラフで表示
+- `-v, --invert-match` — 類似度が低いファイルを表示（逆マッチ、`grep -v` と同様）
+- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
+- `-p, --top-percent` — 上位N%を表示（デフォルト: 10）
+- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュ比較）はスキップ
+- `--force` — `.git` がなくてもカレントディレクトリに `.concept/` を強制作成
+- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
+- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
+
+#### Tree-sitter 対応言語
+
+`concept-grep --index` や `concept-embed --source-file` でソースファイルをインデックス化する際、tree-sitter を使用して構造的な要約（クラス、関数、型シグネチャなど）を抽出し、より高品質な埋め込みを生成します。非対応のファイルは元のテキストをそのまま使用します。
+
+| 言語 | 拡張子 |
+|------|--------|
+| Java | `.java` |
+| Python | `.py` |
+| JavaScript | `.js`, `.mjs`, `.cjs`, `.jsx` |
+| TypeScript | `.ts`, `.tsx` |
+| Go | `.go` |
+| Rust | `.rs` |
+| C | `.c`, `.h` |
+| C++ | `.cpp`, `.cxx`, `.cc`, `.hpp`, `.hxx`, `.hh` |
+| C# | `.cs` |
+| Ruby | `.rb` |
+| PHP | `.php` |
+| Swift | `.swift` |
+| Kotlin | `.kt`, `.kts` |
+| Scala | `.scala` |
+| Haskell | `.hs` |
+| Elixir | `.ex`, `.exs` |
+| Lua | `.lua` |
+| Bash | `.sh`, `.bash` |
+| Objective-C | `.m` |
+| OCaml | `.ml`, `.mli` |
+| Zig | `.zig` |
+| HTML | `.html`, `.htm` |
+| CSS | `.css` |
+| JSON | `.json` |
+| YAML | `.yaml`, `.yml` |
+| TOML | `.toml` |
+
+### concept-search
+
+自然言語のクエリテキストで `.concept` ファイルをセマンティック検索します。デフォルト出力はファイルパスのみ（Unix フレンドリー）。
+
+```bash
+# .concept ファイルを検索
+concept-search "iOS Safari browser bug" concepts/*.concept
+
+# スコア表示
+concept-search -s "TypeScript型エラー" concepts/*.concept
+
+# 上位5件のみ表示
+concept-search -n 5 "hydration problem" concepts/*.concept
+```
+
+オプション:
+- `-s, --score` — 類似度スコアを表示
+- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
+- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
+- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
+- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
 
 ### concept-embed
 
@@ -168,124 +276,6 @@ package com.example.shop.model;
 - `--json` — 生JSONを出力
 
 `--json` で生のJSONボディを出力できます。
-
-### concept-search
-
-自然言語のクエリテキストで `.concept` ファイルをセマンティック検索します。デフォルト出力はファイルパスのみ（Unix フレンドリー）。
-
-```bash
-# .concept ファイルを検索
-concept-search "iOS Safari browser bug" concepts/*.concept
-
-# スコア表示
-concept-search -s "TypeScript型エラー" concepts/*.concept
-
-# 上位5件のみ表示
-concept-search -n 5 "hydration problem" concepts/*.concept
-```
-
-オプション:
-- `-s, --score` — 類似度スコアを表示
-- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
-- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
-- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
-- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
-
-### concept-grep
-
-セマンティック grep — ソースファイルを意味で検索します。`.concept/` ディレクトリの集中インデックス、またはソースファイルと同階層の `.concept` ファイルを使用します。
-
-```bash
-# まずソースファイルをインデックス化
-concept-grep --index -r src/
-
-# 意味で検索（出力はファイルパスのみ）
-concept-grep "ユーザー認証" src/*.java
-
-# 再帰検索
-concept-grep -r "決済処理" src/
-
-# スコア表示
-concept-grep -s "サーバーへのデータ送信" src/*.java
-
-# 上位20%を表示
-concept-grep -p 20 -r "データバリデーション" src/
-
-# 逆マッチ: 類似度が低いファイルを表示
-concept-grep -v "サーバーへのデータ送信" src/*.java
-
-# パイプと組み合わせ
-concept-grep -r "エラーハンドリング" src/ | xargs cat
-```
-
-インデックスの検索順序:
-
-1. `.concept/` ディレクトリ（例: `.concept/src/main.java.concept`）
-2. ソースファイルと同階層（例: `src/main.java.concept`）— フォールバック
-
-```text
-# 集中インデックス
-.concept/
-├── src/
-│   ├── main.java.concept
-│   └── client.java.concept
-src/
-├── main.java
-└── client.java
-
-# または同階層レイアウト
-src/
-├── main.java
-├── main.java.concept
-├── client.java
-└── client.java.concept
-```
-
-オプション:
-- `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
-- `-s, --score` — 類似度スコアを表示
-- `-g, --graph` — 類似度をバーグラフで表示
-- `-v, --invert-match` — 類似度が低いファイルを表示（逆マッチ、`grep -v` と同様）
-- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
-- `-p, --top-percent` — 上位N%を表示（デフォルト: 10）
-- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
-- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュ比較）はスキップ
-- `--force` — `.git` がなくてもカレントディレクトリに `.concept/` を強制作成
-- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
-- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
-
-#### Tree-sitter 対応言語
-
-`concept-grep --index` や `concept-embed --source-file` でソースファイルをインデックス化する際、tree-sitter を使用して構造的な要約（クラス、関数、型シグネチャなど）を抽出し、より高品質な埋め込みを生成します。非対応のファイルは元のテキストをそのまま使用します。
-
-| 言語 | 拡張子 |
-|------|--------|
-| Java | `.java` |
-| Python | `.py` |
-| JavaScript | `.js`, `.mjs`, `.cjs`, `.jsx` |
-| TypeScript | `.ts`, `.tsx` |
-| Go | `.go` |
-| Rust | `.rs` |
-| C | `.c`, `.h` |
-| C++ | `.cpp`, `.cxx`, `.cc`, `.hpp`, `.hxx`, `.hh` |
-| C# | `.cs` |
-| Ruby | `.rb` |
-| PHP | `.php` |
-| Swift | `.swift` |
-| Kotlin | `.kt`, `.kts` |
-| Scala | `.scala` |
-| Haskell | `.hs` |
-| Elixir | `.ex`, `.exs` |
-| Lua | `.lua` |
-| Bash | `.sh`, `.bash` |
-| Objective-C | `.m` |
-| OCaml | `.ml`, `.mli` |
-| Zig | `.zig` |
-| HTML | `.html`, `.htm` |
-| CSS | `.css` |
-| JSON | `.json` |
-| YAML | `.yaml`, `.yml` |
-| TOML | `.toml` |
 
 ### concept-sim
 
@@ -536,6 +526,14 @@ concept-file/
     │   └── concepts/        — 生成された .concept ファイル
     └── vuejs-issues/
         └── concepts/        — vuejs/core の GitHub issue
+```
+
+## OpenAI APIを使う場合
+
+ローカルLLMの代わりにOpenAI APIを使うこともできます:
+
+```bash
+export OPENAI_API_KEY="sk-..."
 ```
 
 ## ライセンス
