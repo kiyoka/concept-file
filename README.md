@@ -152,6 +152,8 @@ src/
 └── client.java.concept
 ```
 
+Search uses **hybrid scoring** by default — combining semantic (embedding) similarity with keyword matching for better precision on compound queries. Use `--keyword-weight 0` to disable keyword matching and use pure semantic search.
+
 Options:
 - `-r, --recursive` — Recurse into directories (skips `.git/`, `.concept/`, `.venv/`, `node_modules/`)
 - `-s, --score` — Show similarity scores
@@ -159,9 +161,10 @@ Options:
 - `-v, --invert-match` — Show least similar files (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `-p, --top-percent` — Show top N% of results by similarity (default: 10)
-- `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages). The `.concept/` directory is created next to `.git/`. Unchanged files (by SHA-256 hash) are skipped.
+- `--keyword-weight` — Weight for keyword score in hybrid search (default: 0.3). Set to 0 for pure semantic search.
+- `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages). The `.concept/` directory is created next to `.git/`. Unchanged files (by SHA-256 hash and model) are skipped.
 - `--force` — Force creating `.concept/` in the current directory even without `.git`
-- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
+- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`). If the model changes, `--index` will re-embed even if the source hash is unchanged.
 - `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
 
 #### Tree-sitter supported languages

@@ -110,6 +110,35 @@ def collect_source_files(paths, recursive):
     return files
 
 
+STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "can", "shall", "not", "no", "nor",
+    "so", "if", "then", "than", "that", "this", "these", "those", "it",
+    "its", "how", "what", "when", "where", "which", "who", "whom", "why",
+}
+
+
+def extract_keywords(query):
+    """Extract keywords from query, removing stop words."""
+    import re
+    words = re.split(r'\s+', query.strip().lower())
+    return [w for w in words if w and w not in STOP_WORDS]
+
+
+def keyword_score(filepath, keywords):
+    """Compute keyword hit ratio for a file (0.0 to 1.0)."""
+    if not keywords:
+        return 0.0
+    try:
+        text = Path(filepath).read_text(errors="replace").lower()
+    except (OSError, UnicodeDecodeError):
+        return 0.0
+    hits = sum(1 for kw in keywords if kw in text)
+    return hits / len(keywords)
+
+
 def embed_query(text, model, api_base=None):
     """Generate embedding for query text."""
     import openai
@@ -149,6 +178,8 @@ def main():
                         help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
     parser.add_argument("--index", action="store_true",
                         help="Generate .concept files for the specified source files")
+    parser.add_argument("--keyword-weight", type=float, default=0.3,
+                        help="Weight for keyword score in hybrid search (default: 0.3)")
     parser.add_argument("--force", action="store_true",
                         help="Force creating .concept/ in current directory even without .git")
     args = parser.parse_args()
@@ -265,7 +296,10 @@ def main():
 
     import math
 
-    all_results = []
+    keywords = extract_keywords(args.query)
+
+    # Collect semantic scores for all source files with .concept files
+    semantic_results = {}
     for sf in source_files:
         concept_path = source_to_concept_path(concept_root, sf)
         if not concept_path or not concept_path.exists():
@@ -288,11 +322,28 @@ def main():
             if not target_vec:
                 continue
             sim = cosine_similarity(query_vec, target_vec)
-            all_results.append((sim, sf))
+            semantic_results[str(sf)] = (sim, sf)
         except (ValueError, FileNotFoundError) as e:
             print(f"Warning: {concept_path}: {e}", file=sys.stderr)
 
-    # Sort by similarity: descending for normal, ascending for invert
+    # Also find files matching keywords that may not be in semantic results
+    for sf in source_files:
+        sf_key = str(sf)
+        if sf_key not in semantic_results:
+            kw_sc = keyword_score(sf, keywords)
+            if kw_sc > 0:
+                semantic_results[sf_key] = (0.0, sf)
+
+    # Compute final scores (hybrid: semantic + keyword)
+    all_results = []
+    kw_weight = args.keyword_weight
+    sem_weight = 1.0 - kw_weight
+    for sf_key, (sem_sim, sf) in semantic_results.items():
+        kw_sc = keyword_score(sf, keywords)
+        final_score = sem_sim * sem_weight + kw_sc * kw_weight
+        all_results.append((final_score, sf))
+
+    # Sort by score: descending for normal, ascending for invert
     if args.invert_match:
         all_results.sort(key=lambda x: x[0])
     else:

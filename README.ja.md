@@ -150,6 +150,8 @@ src/
 └── client.java.concept
 ```
 
+検索はデフォルトで**ハイブリッドスコアリング**を使用します — セマンティック（埋め込み）類似度とキーワードマッチングを組み合わせることで、複合的なクエリの精度を向上させます。`--keyword-weight 0` でキーワードマッチングを無効にし、純粋なセマンティック検索に切り替えられます。
+
 オプション:
 - `-r, --recursive` — ディレクトリを再帰的に検索（`.git/`, `.concept/`, `.venv/`, `node_modules/` はスキップ）
 - `-s, --score` — 類似度スコアを表示
@@ -157,9 +159,10 @@ src/
 - `-v, --invert-match` — 類似度が低いファイルを表示（逆マッチ、`grep -v` と同様）
 - `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
 - `-p, --top-percent` — 上位N%を表示（デフォルト: 10）
-- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュ比較）はスキップ
+- `--keyword-weight` — ハイブリッド検索におけるキーワードスコアの重み（デフォルト: 0.3）。0にすると純粋なセマンティック検索
+- `--index` — 指定したソースファイルの `.concept` ファイルを生成（対応言語では tree-sitter による要約を使用）。`.concept/` ディレクトリは `.git/` の隣に作成。変更のないファイル（SHA-256ハッシュとモデルの比較）はスキップ
 - `--force` — `.git` がなくてもカレントディレクトリに `.concept/` を強制作成
-- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
+- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）。モデルが変更された場合、ソースハッシュが同じでも `--index` で再埋め込みを実行
 - `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
 
 #### Tree-sitter 対応言語
