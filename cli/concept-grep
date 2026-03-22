@@ -218,6 +218,8 @@ def main():
                 from concept_file.summarizer import summarize
                 embed_source, used_summarizer = summarize(str(sf), text)
                 vector = embed_query(embed_source, args.model, api_base=args.api_base)
+                filename_vec = embed_query(sf.name, args.model, api_base=args.api_base)
+                fn_sim = cosine_similarity(vector, filename_vec)
                 data = {
                     "concept": sf.name,
                     "version": "1.0",
@@ -229,6 +231,7 @@ def main():
                         "dim": len(vector),
                         "vector": vector,
                     },
+                    "filename_similarity": round(fn_sim, 4),
                     "provenance": {
                         "source_file": str(sf),
                         "source_hash": current_hash,
@@ -237,7 +240,7 @@ def main():
                 }
                 write_concept(str(concept_path), data)
                 count += 1
-                print(f"Indexed: {sf}", file=sys.stderr)
+                print(f"Indexed: {sf} (filename_similarity: {fn_sim:.4f})", file=sys.stderr)
             except Exception as e:
                 print(f"Warning: {sf}: {e}", file=sys.stderr)
         print(f"Indexed {count} files. (skipped {skipped} unchanged)", file=sys.stderr)

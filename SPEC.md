@@ -81,6 +81,12 @@ All data, including embedding vectors, is stored within this JSON object.
 
 \* Required when `embedding` object is present.
 
+#### Filename Similarity
+
+| Field                  | Type   | Required | Description                                                        |
+|------------------------|--------|----------|--------------------------------------------------------------------|
+| `filename_similarity`  | number | No       | Cosine similarity (0–1) between the content embedding and a filename-only embedding. 1 = maximum similarity. |
+
 #### Provenance
 
 | Field                   | Type   | Required | Description                                    |
@@ -119,6 +125,8 @@ CNCP v1 1021
     "dim": 1536,
     "vector": [0.0234, -0.1823, 0.0091, ...]
   },
+
+  "filename_similarity": 0.72,
 
   "provenance": {
     "source_url": "https://example.com/article",
