@@ -2,6 +2,7 @@
 """Semantic grep — find source files by meaning using .concept index."""
 
 import argparse
+import fnmatch
 import hashlib
 import os
 import signal
@@ -78,7 +79,22 @@ def concept_to_source_path(concept_root, concept_path):
     return project_root / source_rel
 
 
-def collect_source_files(paths, recursive):
+def file_matches_filters(filepath, include_patterns, exclude_patterns):
+    """Check if a file matches include/exclude filters."""
+    name = str(filepath)
+    if exclude_patterns:
+        for pat in exclude_patterns:
+            if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(filepath.name, pat):
+                return False
+    if include_patterns:
+        for pat in include_patterns:
+            if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(filepath.name, pat):
+                return True
+        return False
+    return True
+
+
+def collect_source_files(paths, recursive, include_patterns=None, exclude_patterns=None):
     """Collect source file paths from arguments, expanding directories if recursive."""
     SKIP_DIRS = {".git", ".concept", ".venv", "__pycache__", "node_modules"}
 
@@ -89,7 +105,8 @@ def collect_source_files(paths, recursive):
             if entry.name.startswith(".") or entry.name in SKIP_DIRS:
                 continue
             if entry.is_file():
-                result.append(entry)
+                if file_matches_filters(entry, include_patterns, exclude_patterns):
+                    result.append(entry)
             elif entry.is_dir():
                 result.extend(walk_recursive(entry))
         return result
@@ -98,7 +115,8 @@ def collect_source_files(paths, recursive):
     for p in paths:
         path = Path(p)
         if path.is_file():
-            files.append(path)
+            if file_matches_filters(path, include_patterns, exclude_patterns):
+                files.append(path)
         elif path.is_dir():
             if recursive:
                 files.extend(walk_recursive(path))
@@ -180,6 +198,10 @@ def main():
                         help="Generate .concept files for the specified source files")
     parser.add_argument("--keyword-weight", type=float, default=0.3,
                         help="Weight for keyword score in hybrid search (default: 0.3)")
+    parser.add_argument("--include", action="append", default=[], metavar="GLOB",
+                        help="Only include files matching glob pattern (can be repeated)")
+    parser.add_argument("--exclude", action="append", default=[], metavar="GLOB",
+                        help="Exclude files matching glob pattern (can be repeated)")
     parser.add_argument("--force", action="store_true",
                         help="Force creating .concept/ in current directory even without .git")
     args = parser.parse_args()
@@ -212,7 +234,8 @@ def main():
 
         print(f"Using: {concept_root.resolve()}", file=sys.stderr)
 
-        source_files = collect_source_files(index_paths, args.recursive)
+        source_files = collect_source_files(index_paths, args.recursive,
+                                           args.include or None, args.exclude or None)
         if not source_files:
             print("No source files found.", file=sys.stderr)
             sys.exit(1)
@@ -283,7 +306,8 @@ def main():
         sys.exit(1)
 
     search_paths = args.paths if args.paths else ["."]
-    source_files = collect_source_files(search_paths, args.recursive)
+    source_files = collect_source_files(search_paths, args.recursive,
+                                       args.include or None, args.exclude or None)
     if not source_files:
         print("No source files found.", file=sys.stderr)
         sys.exit(1)
