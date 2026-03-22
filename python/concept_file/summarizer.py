@@ -1393,6 +1393,16 @@ _SUMMARIZERS = {
 }
 
 
+# Extensions for plain text files (pass full text as-is)
+_TEXT_EXTENSIONS = {
+    ".md", ".txt", ".rst", ".adoc", ".org",
+    ".csv", ".tsv",
+    ".log",
+}
+
+_FALLBACK_HEAD_LINES = 20
+
+
 # ─── Public API ───────────────────────────────────────────────────────
 
 def summarize(filename, source_text):
@@ -1402,13 +1412,20 @@ def summarize(filename, source_text):
     text to be used for embedding, and used_summarizer indicates whether
     tree-sitter summarization was applied.
 
-    For unsupported languages, returns the original text with filename prepended.
+    For unsupported languages:
+    - Text files (.md, .txt, etc.) return the original text as-is.
+    - Other files return the first ~20 lines to avoid token truncation.
     """
     lang = get_language(filename)
     basename = Path(filename).name
 
     if not lang:
-        return f"{basename}\n{source_text}", False
+        ext = Path(filename).suffix.lower()
+        if ext in _TEXT_EXTENSIONS:
+            return f"{basename}\n{source_text}", False
+        lines = source_text.splitlines()
+        head = "\n".join(lines[:_FALLBACK_HEAD_LINES])
+        return f"{basename}\n{head}", False
 
     try:
         parser = _load_parser(lang)
