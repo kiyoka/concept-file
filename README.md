@@ -203,28 +203,6 @@ When indexing source files with `concept-grep --index` or `concept-embed --sourc
 | YAML | `.yaml`, `.yml` |
 | TOML | `.toml` |
 
-### concept-search
-
-Semantic search over `.concept` files using a natural language query. Output is file paths only by default (Unix-friendly).
-
-```bash
-# Search .concept files
-concept-search "iOS Safari browser bug" concepts/*.concept
-
-# Show scores
-concept-search -s "TypeScript type error" concepts/*.concept
-
-# Top 5 results only
-concept-search -n 5 "hydration problem" concepts/*.concept
-```
-
-Options:
-- `-s, --score` — Show similarity scores
-- `-n, --top` — Show only top N results (default: all)
-- `--threshold` — Minimum similarity score (default: 0.5)
-- `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`)
-- `--api-base` — OpenAI-compatible API base URL (env: `CONCEPT_API_BASE`)
-
 ### concept-embed
 
 Generate a `.concept` file from text with an embedding vector.
@@ -450,7 +428,7 @@ The `examples/vuejs-issues/` directory demonstrates semantic search over real-wo
 "Are there any iOS/Safari-specific bug reports?"
 
 ```bash
-cli/concept-search "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
+concept-grep -s "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
 ```
 
 ```
@@ -497,7 +475,6 @@ concept-file/
 │       └── search.py        — Cosine similarity/distance
 ├── cli/
 │   ├── concept-embed        — Text → .concept generation
-│   ├── concept-search       — Semantic search over .concept files
 │   ├── concept-grep         — Semantic grep over source files
 │   ├── concept-show         — Human-readable display
 │   ├── concept-sim          — Similarity calculation
