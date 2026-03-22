@@ -201,10 +201,13 @@ def main():
                 try:
                     existing = read_existing(str(concept_path))
                     existing_hash = existing.get("provenance", {}).get("source_hash")
-                    if existing_hash == current_hash:
+                    existing_model = existing.get("embedding", {}).get("model")
+                    if existing_hash == current_hash and existing_model == args.model:
                         skipped += 1
                         print(f"Skipped (unchanged): {sf}", file=sys.stderr)
                         continue
+                    if existing_hash == current_hash and existing_model != args.model:
+                        print(f"Re-indexing (model changed: {existing_model} -> {args.model}): {sf}", file=sys.stderr)
                 except (ValueError, FileNotFoundError):
                     pass
             concept_path.parent.mkdir(parents=True, exist_ok=True)
@@ -271,6 +274,13 @@ def main():
                 continue
         try:
             data = read_concept(str(concept_path))
+            file_model = data.get("embedding", {}).get("model")
+            if file_model and file_model != args.model:
+                print(f"Error: model mismatch: {concept_path} was embedded with '{file_model}' "
+                      f"but current model is '{args.model}'. "
+                      f"Re-run 'concept-grep --index' to re-embed.",
+                      file=sys.stderr)
+                sys.exit(1)
             target_vec = data.get("embedding", {}).get("vector")
             if not target_vec:
                 continue
