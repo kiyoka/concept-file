@@ -161,6 +161,7 @@ Options:
 - `-v, --invert-match` — Show least similar files (invert match, like `grep -v`)
 - `-n, --top` — Show only top N results (default: all)
 - `-p, --top-percent` — Show top N% of results by similarity (default: 10)
+- `--summary` — Show `embed_source` summary (first 5 lines) below each result for quick triage
 - `--keyword-weight` — Weight for keyword score in hybrid search (default: 0.3). Set to 0 for pure semantic search.
 - `--include GLOB` — Only include files matching the glob pattern (can be repeated, e.g. `--include "*.c" --include "*.h"`)
 - `--exclude GLOB` — Exclude files matching the glob pattern (can be repeated, e.g. `--exclude "*/test/*"`)
