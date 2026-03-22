@@ -162,6 +162,8 @@ Options:
 - `-n, --top` — Show only top N results (default: all)
 - `-p, --top-percent` — Show top N% of results by similarity (default: 10)
 - `--keyword-weight` — Weight for keyword score in hybrid search (default: 0.3). Set to 0 for pure semantic search.
+- `--include GLOB` — Only include files matching the glob pattern (can be repeated, e.g. `--include "*.c" --include "*.h"`)
+- `--exclude GLOB` — Exclude files matching the glob pattern (can be repeated, e.g. `--exclude "*/test/*"`)
 - `--index` — Generate `.concept` files for the specified source files (uses tree-sitter summarization for supported languages). The `.concept/` directory is created next to `.git/`. Unchanged files (by SHA-256 hash and model) are skipped.
 - `--force` — Force creating `.concept/` in the current directory even without `.git`
 - `--model` — Embedding model (default: `text-embedding-3-small`, env: `CONCEPT_EMBED_MODEL`). If the model changes, `--index` will re-embed even if the source hash is unchanged.
