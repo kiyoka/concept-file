@@ -198,8 +198,8 @@ def main():
                         help="Generate .concept files for the specified source files")
     parser.add_argument("--keyword-weight", type=float, default=0.3,
                         help="Weight for keyword score in hybrid search (default: 0.3)")
-    parser.add_argument("--summary", action="store_true",
-                        help="Show embed_source summary for each result")
+    parser.add_argument("--summary", nargs="?", type=int, const=5, default=None, metavar="LINES",
+                        help="Show embed_source summary for each result (default: 5 lines)")
     parser.add_argument("--include", action="append", default=[], metavar="GLOB",
                         help="Only include files matching glob pattern (can be repeated)")
     parser.add_argument("--exclude", action="append", default=[], metavar="GLOB",
@@ -350,8 +350,8 @@ def main():
                 continue
             sim = cosine_similarity(query_vec, target_vec)
             semantic_results[str(sf)] = (sim, sf)
-            if args.summary:
-                embed_source = data.get("embed_source")
+            if args.summary is not None:
+                embed_source = data.get("embed_source") or data.get("text")
                 if embed_source:
                     summaries[str(sf)] = embed_source
         except (ValueError, FileNotFoundError) as e:
@@ -392,7 +392,7 @@ def main():
         min_sim, max_sim = min(sims), max(sims)
         sim_range = max_sim - min_sim
 
-    SUMMARY_MAX_LINES = 5
+    summary_lines = args.summary if args.summary is not None else 0
 
     for sim, sf in results:
         if args.graph:
@@ -406,11 +406,11 @@ def main():
             print(f"{sim:.3f}\t{sf}")
         else:
             print(sf)
-        if args.summary and str(sf) in summaries:
-            lines = summaries[str(sf)].split("\n")[:SUMMARY_MAX_LINES]
-            for line in lines:
+        if summary_lines > 0 and str(sf) in summaries:
+            all_lines = summaries[str(sf)].split("\n")
+            for line in all_lines[:summary_lines]:
                 print(f"  {line}")
-            if len(summaries[str(sf)].split("\n")) > SUMMARY_MAX_LINES:
+            if len(all_lines) > summary_lines:
                 print(f"  ...")
             print()
 
