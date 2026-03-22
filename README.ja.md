@@ -201,28 +201,6 @@ src/
 | YAML | `.yaml`, `.yml` |
 | TOML | `.toml` |
 
-### concept-search
-
-自然言語のクエリテキストで `.concept` ファイルをセマンティック検索します。デフォルト出力はファイルパスのみ（Unix フレンドリー）。
-
-```bash
-# .concept ファイルを検索
-concept-search "iOS Safari browser bug" concepts/*.concept
-
-# スコア表示
-concept-search -s "TypeScript型エラー" concepts/*.concept
-
-# 上位5件のみ表示
-concept-search -n 5 "hydration problem" concepts/*.concept
-```
-
-オプション:
-- `-s, --score` — 類似度スコアを表示
-- `-n, --top` — 上位N件のみ表示（デフォルト: 全件）
-- `--threshold` — 最低類似度スコア（デフォルト: 0.5）
-- `--model` — 埋め込みモデル（デフォルト: `text-embedding-3-small`、環境変数 `CONCEPT_EMBED_MODEL`）
-- `--api-base` — OpenAI互換APIのベースURL（環境変数 `CONCEPT_API_BASE`）
-
 ### concept-embed
 
 テキストから埋め込みベクトル付きの `.concept` ファイルを生成します。
@@ -457,7 +435,7 @@ gh issue list --repo vuejs/core --state open --limit 1000 --json number,title,bo
 「iOS/Safari固有のバグに関するissueは？」
 
 ```bash
-cli/concept-search "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
+concept-grep -s "iOS Safari browser specific bug" examples/vuejs-issues/concepts/*.concept
 ```
 
 ```
@@ -518,7 +496,6 @@ concept-file/
 │       └── search.py        — コサイン類似度/距離
 ├── cli/
 │   ├── concept-embed        — テキスト → .concept 生成
-│   ├── concept-search       — .concept ファイルのセマンティック検索
 │   ├── concept-grep         — ソースファイルのセマンティック grep
 │   ├── concept-show         — 人間が読める形式で表示
 │   ├── concept-sim          — 類似度計算
