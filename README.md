@@ -78,6 +78,22 @@ concept-grep --index -r src/
 concept-grep -r "user authentication" src/
 ```
 
+### 5. Real-world example: searching PostgreSQL 18.3 source code (2271 files)
+
+```bash
+$ concept-grep -g -r "user auth" src/ --exclude "*/test*/*" --exclude "*/po/*" | head
+██████████(0.64)	src/interfaces/libpq/fe-auth.c
+██████████(0.63)	src/backend/libpq/auth.c
+██████████(0.63)	src/backend/utils/misc/superuser.c
+█████████ (0.62)	src/backend/libpq/auth-oauth.c
+█████████ (0.62)	src/include/libpq/auth.h
+█████████ (0.61)	src/include/catalog/pg_authid.h
+█████████ (0.60)	src/include/libpq/oauth.h
+████████  (0.59)	src/port/win32security.c
+████████  (0.59)	src/include/libpq/hba.h
+████████  (0.59)	src/interfaces/libpq/fe-auth-oauth.c
+```
+
 That's it! See [Alternative Embedding Models](#alternative-embedding-models) for other model options, or [Using OpenAI API](#using-openai-api) to use the OpenAI API instead.
 
 ## CLI Tools

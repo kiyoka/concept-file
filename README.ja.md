@@ -76,6 +76,22 @@ concept-grep --index -r src/
 concept-grep -r "ユーザー認証" src/
 ```
 
+### 5. 実用例: PostgreSQL 18.3 ソースコード（2271ファイル）での検索
+
+```bash
+$ concept-grep -g -r "ユーザー認証" src/ --exclude "*/test*/*" --exclude "*/po/*" | head
+██████████(0.33)	src/interfaces/libpq/fe-auth.c
+█████████ (0.32)	src/include/libpq/auth.h
+█████████ (0.31)	src/include/libpq/crypt.h
+████████  (0.31)	src/bin/pgevent/pgevent.c
+████████  (0.31)	src/backend/libpq/auth.c
+████████  (0.31)	src/port/win32security.c
+████████  (0.31)	src/include/libpq/scram.h
+████████  (0.30)	src/include/catalog/pg_auth_members.h
+████████  (0.30)	src/backend/libpq/auth-oauth.c
+███████   (0.30)	src/bin/psql/describe.c
+```
+
 以上です！他のモデルを使いたい場合は[他の埋め込みモデル](#他の埋め込みモデル)を、OpenAI APIを使う場合は[OpenAI APIを使う場合](#openai-apiを使う場合)を参照してください。
 
 ## CLI ツール
