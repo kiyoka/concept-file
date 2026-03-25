@@ -42,53 +42,31 @@ CNCP v1 1432
 
 詳細な仕様は [SPEC.md](SPEC.md) を参照してください。
 
-## セットアップ
+## クイックスタート
 
-### インストール
-
-```bash
-git clone https://github.com/kiyoka/concept-file.git
-cd concept-file
-python -m venv .venv
-source .venv/bin/activate
-pip install openai
-```
-
-`cli/` ディレクトリをPATHに追加します:
+### 1. インストール
 
 ```bash
-export PATH="$PWD/cli:$PATH"
+pip install concept-file
 ```
 
-シェルの設定ファイル（`~/.bashrc`, `~/.zshrc` 等）に追記すると永続化できます。
+### 2. LM Studioのセットアップ（ローカル埋め込み — 無料・APIキー不要）
 
-### ローカルLLMを使う場合（LM Studio） — 推奨
-
-[LM Studio](https://lmstudio.ai/) を使えば、ローカルの埋め込みモデルを無料で利用できます。APIキーは不要で、大量のファイルをインデックス化する際にコストがかかりません。
-
-1. LM Studioをインストールして起動
-2. 埋め込みモデルをダウンロード（下表参照）
+1. [LM Studio](https://lmstudio.ai/) をインストールして起動
+2. **text-embedding-qwen3-embedding-0.6b** を検索してダウンロード
 3. **Developer** タブでモデルをロード
 4. ローカルAPIサーバーが `http://localhost:1234/v1` で起動
 
-#### 推奨埋め込みモデル
+### 3. 環境変数を設定
 
-| モデル | パラメータ数 | 次元数 | MTEB多言語スコア | 特徴 |
-|--------|------------|--------|-----------------|------|
-| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | 軽量・高速。手軽に試すのに最適 |
-| `Qwen3-Embedding-0.6B` | 0.6B | 1024 | 64.33 | 品質と速度のバランスが良い |
-| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | 最高品質（MTEB多言語1位）。VRAMが多く必要 |
-
-すべてのモデルが多言語入力（日本語含む）に対応しています。MTEB多言語スコアは [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard) より。
-
-環境変数を設定します:
+シェルの設定ファイル（`~/.bashrc`, `~/.zshrc` 等）に追加:
 
 ```bash
 export CONCEPT_API_BASE="http://localhost:1234/v1"
-export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # または Qwen3-Embedding-0.6B, Qwen3-Embedding-8B
+export CONCEPT_EMBED_MODEL="text-embedding-qwen3-embedding-0.6b"
 ```
 
-あとはCLIツールをそのまま使えます — 自動的にローカルモデルが使われます:
+### 4. インデックス作成と検索
 
 ```bash
 # ソースファイルをインデックス化
@@ -97,6 +75,8 @@ concept-grep --index -r src/
 # 意味でコードを検索
 concept-grep -r "ユーザー認証" src/
 ```
+
+以上です！他のモデルを使いたい場合は[他の埋め込みモデル](#他の埋め込みモデル)を、OpenAI APIを使う場合は[OpenAI APIを使う場合](#openai-apiを使う場合)を参照してください。
 
 ## CLI ツール
 
@@ -207,13 +187,13 @@ src/
 
 ```bash
 # コマンドライン引数から
-cli/concept-embed --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
+concept-embed --name "My Concept" --text "埋め込みたいテキスト" -o output.concept
 
 # 標準入力から
-echo "埋め込みたいテキスト" | cli/concept-embed --name "My Concept" -o output.concept
+echo "埋め込みたいテキスト" | concept-embed --name "My Concept" -o output.concept
 
 # ソースファイルから
-cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
+cat src/User.java | concept-embed --name "User" -o src/User.java.concept
 ```
 
 オプション:
@@ -232,7 +212,7 @@ cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
 `.concept` ファイルの内容を人間が読める形式で表示します。
 
 ```bash
-cli/concept-show output.concept
+concept-show output.concept
 ```
 
 ```
@@ -266,7 +246,7 @@ package com.example.shop.model;
 クエリの `.concept` ファイルから1つ以上のターゲットへのコサイン類似度を計算します。結果は類似度の高い順にソートされます。
 
 ```bash
-cli/concept-sim query.concept targets/*.concept
+concept-sim query.concept targets/*.concept
 ```
 
 ```
@@ -281,7 +261,7 @@ cli/concept-sim query.concept targets/*.concept
 `-s` オプションでスコアとしきい値を表示できます：
 
 ```bash
-cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
+concept-sim -s --threshold 0.5 query.concept targets/*.concept
 ```
 
 ```
@@ -297,16 +277,16 @@ cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
 
 ```bash
 # 引数で指定（2D）
-cli/concept-plot concepts/*.concept
+concept-plot concepts/*.concept
 
 # 3D 散布図を生成
-cli/concept-plot --3d concepts/*.concept
+concept-plot --3d concepts/*.concept
 
 # 標準入力から（find との組み合わせ）
-find . -name '*.concept' | cli/concept-plot
+find . -name '*.concept' | concept-plot
 
 # 出力ファイルを指定
-cli/concept-plot concepts/*.concept -o my_plot.html
+concept-plot concepts/*.concept -o my_plot.html
 ```
 
 オプション:
@@ -345,7 +325,7 @@ pip install umap-learn plotly numpy
 ```bash
 for f in examples/java-project/src/*.java; do
   name=$(basename "$f" .java)
-  cat "$f" | cli/concept-embed --name "$name" --language en -o "${f}.concept"
+  cat "$f" | concept-embed --name "$name" --language en -o "${f}.concept"
 done
 ```
 
@@ -354,7 +334,7 @@ done
 「`User` に最も似ているクラスはどれ？」
 
 ```bash
-cli/concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
+concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
 ```
 
 結果は `Order`（購入関係）と `AuthService`（認証関係）が `User` に最も近いことを示しており、コード上の実際のドメイン関係と一致しています。
@@ -399,7 +379,7 @@ bash examples/wikipedia/fetch-ja.sh
 ### 3D可視化
 
 ```bash
-cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
+concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
 ```
 
 embeddingモデル（text-embedding-3-small）は多言語対応のため、同じ概念の英語版と日本語版（例: 「Dog」と「イヌ」）が近くに配置されます。また、カテゴリごとに明確なクラスタが形成されることが確認できます。
@@ -489,17 +469,15 @@ concept-file/
 ├── SPEC.md                  — フォーマット仕様 (v0.1.0)
 ├── README.md                — 英語版 README
 ├── README.ja.md             — 日本語版 README（このファイル）
+├── pyproject.toml           — パッケージメタデータ (pip install concept-file)
 ├── python/
 │   └── concept_file/
 │       ├── __init__.py
 │       ├── reader.py        — .concept ファイルの読み書き
-│       └── search.py        — コサイン類似度/距離
-├── cli/
-│   ├── concept-embed        — テキスト → .concept 生成
-│   ├── concept-grep         — ソースファイルのセマンティック grep
-│   ├── concept-show         — 人間が読める形式で表示
-│   ├── concept-sim          — 類似度計算
-│   └── concept-plot         — UMAP 2D/3D 散布図で可視化
+│       ├── search.py        — コサイン類似度/距離
+│       ├── summarizer.py    — Tree-sitter ソースコード要約
+│       └── cli/             — CLIエントリーポイント（pip経由でインストール）
+├── cli/                     — スタンドアロンCLIスクリプト（レガシー）
 └── examples/
     ├── java-project/
     │   └── src/             — サンプル Java ソースファイルと .concept ファイル
@@ -510,6 +488,27 @@ concept-file/
     └── vuejs-issues/
         └── concepts/        — vuejs/core の GitHub issue
 ```
+
+## 他の埋め込みモデル
+
+クイックスタートではtext-embedding-qwen3-embedding-0.6bを使いますが、LM Studioで他のモデルに切り替えることもできます:
+
+| モデル | パラメータ数 | 次元数 | MTEB多言語スコア | 特徴 |
+|--------|------------|--------|-----------------|------|
+| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | 軽量・高速。手軽に試すのに最適 |
+| **`text-embedding-qwen3-embedding-0.6b`** | **0.6B** | **1024** | **64.33** | **品質と速度のバランスが良い（推奨）** |
+| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | 最高品質（MTEB多言語1位）。VRAMが多く必要 |
+
+すべてのモデルが多言語入力（日本語含む）に対応しています。MTEB多言語スコアは [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard) より。
+
+モデルを切り替えるには、環境変数を変更して再インデックスします:
+
+```bash
+export CONCEPT_EMBED_MODEL="Qwen3-Embedding-8B"
+concept-grep --index -r src/   # 新しいモデルで再インデックス
+```
+
+**注意:** モデルを変更すると、ソースが変更されていなくても `--index` は自動的に全ファイルを再埋め込みします。
 
 ## OpenAI APIを使う場合
 

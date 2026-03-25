@@ -44,53 +44,31 @@ CNCP v1 1432
 
 See [SPEC.md](SPEC.md) for the full specification.
 
-## Setup
+## Quick Start
 
-### Installation
-
-```bash
-git clone https://github.com/kiyoka/concept-file.git
-cd concept-file
-python -m venv .venv
-source .venv/bin/activate
-pip install openai
-```
-
-Add the `cli/` directory to your PATH:
+### 1. Install
 
 ```bash
-export PATH="$PWD/cli:$PATH"
+pip install concept-file
 ```
 
-You can add this to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.) to make it permanent.
+### 2. Set up LM Studio (local embedding — free, no API key needed)
 
-### Using a Local LLM (LM Studio) — Recommended
-
-You can use a local embedding model via [LM Studio](https://lmstudio.ai/). No API key required, and embedding is free — ideal for indexing large codebases.
-
-1. Install and launch LM Studio
-2. Download an embedding model (see table below)
+1. Install and launch [LM Studio](https://lmstudio.ai/)
+2. Search for and download **text-embedding-qwen3-embedding-0.6b**
 3. Go to the **Developer** tab and load the model
-4. The local API server runs at `http://localhost:1234/v1`
+4. The local API server starts at `http://localhost:1234/v1`
 
-#### Recommended Embedding Models
+### 3. Set environment variables
 
-| Model | Parameters | Dimensions | MTEB Multilingual | Characteristics |
-|-------|-----------|------------|-------------------|-----------------|
-| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | Lightweight, fast. Good for quick experimentation |
-| `Qwen3-Embedding-0.6B` | 0.6B | 1024 | 64.33 | Good balance of quality and speed |
-| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | Highest quality (#1 on MTEB multilingual). Requires more VRAM |
-
-All models support multilingual input (including Japanese). MTEB Multilingual scores are from the [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard).
-
-Set the environment variables:
+Add these to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
 
 ```bash
 export CONCEPT_API_BASE="http://localhost:1234/v1"
-export CONCEPT_EMBED_MODEL="granite-embedding-278m-multilingual"  # or Qwen3-Embedding-0.6B, Qwen3-Embedding-8B
+export CONCEPT_EMBED_MODEL="text-embedding-qwen3-embedding-0.6b"
 ```
 
-Then use the CLI tools as usual — they will automatically use the local model:
+### 4. Index and search
 
 ```bash
 # Index source files
@@ -99,6 +77,8 @@ concept-grep --index -r src/
 # Search by meaning
 concept-grep -r "user authentication" src/
 ```
+
+That's it! See [Alternative Embedding Models](#alternative-embedding-models) for other model options, or [Using OpenAI API](#using-openai-api) to use the OpenAI API instead.
 
 ## CLI Tools
 
@@ -209,13 +189,13 @@ Generate a `.concept` file from text with an embedding vector.
 
 ```bash
 # From a command-line argument
-cli/concept-embed --name "My Concept" --text "Some text to embed" -o output.concept
+concept-embed --name "My Concept" --text "Some text to embed" -o output.concept
 
 # From stdin
-echo "Some text to embed" | cli/concept-embed --name "My Concept" -o output.concept
+echo "Some text to embed" | concept-embed --name "My Concept" -o output.concept
 
 # From a source file
-cat src/User.java | cli/concept-embed --name "User" -o src/User.java.concept
+cat src/User.java | concept-embed --name "User" -o src/User.java.concept
 ```
 
 Options:
@@ -234,7 +214,7 @@ Options:
 Display the contents of a `.concept` file in human-readable form.
 
 ```bash
-cli/concept-show output.concept
+concept-show output.concept
 ```
 
 ```
@@ -268,7 +248,7 @@ Use `--json` to output the raw JSON body.
 Calculate cosine similarity from a query `.concept` file to one or more targets. Results are sorted by similarity (most similar first).
 
 ```bash
-cli/concept-sim query.concept targets/*.concept
+concept-sim query.concept targets/*.concept
 ```
 
 ```
@@ -283,7 +263,7 @@ cli/concept-sim query.concept targets/*.concept
 Use `-s` to show scores with threshold:
 
 ```bash
-cli/concept-sim -s --threshold 0.5 query.concept targets/*.concept
+concept-sim -s --threshold 0.5 query.concept targets/*.concept
 ```
 
 ```
@@ -299,16 +279,16 @@ Visualize `.concept` embeddings as an interactive scatter plot (2D/3D) using UMA
 
 ```bash
 # Basic 2D plot
-cli/concept-plot concepts/*.concept
+concept-plot concepts/*.concept
 
 # 3D scatter plot
-cli/concept-plot --3d concepts/*.concept
+concept-plot --3d concepts/*.concept
 
 # Pipe from find
-find . -name '*.concept' | cli/concept-plot
+find . -name '*.concept' | concept-plot
 
 # Specify output file
-cli/concept-plot concepts/*.concept -o my_plot.html
+concept-plot concepts/*.concept -o my_plot.html
 ```
 
 Options:
@@ -346,7 +326,7 @@ A fictional e-commerce application with 6 classes:
 ```bash
 for f in examples/java-project/src/*.java; do
   name=$(basename "$f" .java)
-  cat "$f" | cli/concept-embed --name "$name" --language en -o "${f}.concept"
+  cat "$f" | concept-embed --name "$name" --language en -o "${f}.concept"
 done
 ```
 
@@ -355,7 +335,7 @@ done
 "Which classes are most similar to `User`?"
 
 ```bash
-cli/concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
+concept-sim examples/java-project/src/User.java.concept examples/java-project/src/*.concept
 ```
 
 Results show that `Order` (purchase relationship) and `AuthService` (authentication relationship) are closest to `User`, which matches the actual domain relationships in the code.
@@ -400,7 +380,7 @@ bash examples/wikipedia/fetch-ja.sh
 ### 3D visualization
 
 ```bash
-cli/concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
+concept-plot --3d examples/wikipedia/concepts/*.concept -o examples/wikipedia/wikipedia_plot_3d.html
 ```
 
 Since the embedding model (text-embedding-3-small) supports multiple languages, the English and Japanese versions of the same concept (e.g., "Dog" and "イヌ") are placed close together. Clear clusters also form by category.
@@ -468,17 +448,15 @@ K-means (k=8) clustering reveals meaningful groups based on issue content:
 concept-file/
 ├── SPEC.md                  — Format specification (v0.1.0)
 ├── README.md                — This file
+├── pyproject.toml           — Package metadata (pip install concept-file)
 ├── python/
 │   └── concept_file/
 │       ├── __init__.py
 │       ├── reader.py        — Read/write .concept files
-│       └── search.py        — Cosine similarity/distance
-├── cli/
-│   ├── concept-embed        — Text → .concept generation
-│   ├── concept-grep         — Semantic grep over source files
-│   ├── concept-show         — Human-readable display
-│   ├── concept-sim          — Similarity calculation
-│   └── concept-plot         — UMAP 2D/3D scatter plot visualization
+│       ├── search.py        — Cosine similarity/distance
+│       ├── summarizer.py    — Tree-sitter source code summarization
+│       └── cli/             — CLI entry points (installed via pip)
+├── cli/                     — Standalone CLI scripts (legacy)
 └── examples/
     ├── java-project/
     │   └── src/             — Sample Java source files with .concept files alongside
@@ -489,6 +467,27 @@ concept-file/
     └── vuejs-issues/
         └── concepts/        — vuejs/core GitHub issues
 ```
+
+## Alternative Embedding Models
+
+The Quick Start uses text-embedding-qwen3-embedding-0.6b, but you can switch to other models in LM Studio:
+
+| Model | Parameters | Dimensions | MTEB Multilingual | Characteristics |
+|-------|-----------|------------|-------------------|-----------------|
+| `granite-embedding-278m-multilingual` | 278M | 768 | 58.3 | Lightweight, fast. Good for quick experimentation |
+| **`text-embedding-qwen3-embedding-0.6b`** | **0.6B** | **1024** | **64.33** | **Good balance of quality and speed (recommended)** |
+| `Qwen3-Embedding-8B` | 8B | 4096 | 70.58 | Highest quality (#1 on MTEB multilingual). Requires more VRAM |
+
+All models support multilingual input (including Japanese). MTEB Multilingual scores are from the [MTEB Leaderboard](https://huggingface.co/spaces/mteb/leaderboard).
+
+To switch models, update the environment variable and re-index:
+
+```bash
+export CONCEPT_EMBED_MODEL="Qwen3-Embedding-8B"
+concept-grep --index -r src/   # re-index with the new model
+```
+
+**Note:** When you change the model, `--index` will automatically re-embed all files even if the source hasn't changed.
 
 ## Using OpenAI API
 
