@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "concept-file"
+version = "0.1.0"
+description = "Portable semantic search without a vector database — just files, find, and sort"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Kiyoka Nishiyama" },
+]
+keywords = ["semantic-search", "embedding", "grep", "concept"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Text Processing :: Indexing",
+]
+dependencies = [
+    "openai>=1.0",
+]
+
+[project.optional-dependencies]
+tree-sitter = [
+    "tree-sitter>=0.21",
+    "tree-sitter-python",
+    "tree-sitter-javascript",
+    "tree-sitter-typescript",
+    "tree-sitter-java",
+    "tree-sitter-go",
+    "tree-sitter-rust",
+    "tree-sitter-c",
+    "tree-sitter-cpp",
+    "tree-sitter-c-sharp",
+    "tree-sitter-ruby",
+    "tree-sitter-php",
+    "tree-sitter-swift",
+    "tree-sitter-kotlin",
+    "tree-sitter-scala",
+    "tree-sitter-haskell",
+    "tree-sitter-elixir",
+    "tree-sitter-lua",
+    "tree-sitter-bash",
+    "tree-sitter-html",
+    "tree-sitter-css",
+    "tree-sitter-json",
+    "tree-sitter-yaml",
+    "tree-sitter-toml",
+    "tree-sitter-zig",
+    "tree-sitter-ocaml",
+    "tree-sitter-objc",
+]
+plot = [
+    "numpy",
+    "umap-learn",
+    "plotly",
+]
+all = [
+    "concept-file[tree-sitter,plot]",
+]
+
+[project.scripts]
+concept-grep = "concept_file.cli.concept_grep:main"
+concept-embed = "concept_file.cli.concept_embed:main"
+concept-show = "concept_file.cli.concept_show:main"
+concept-sim = "concept_file.cli.concept_sim:main"
+concept-plot = "concept_file.cli.concept_plot:main"
+
+[project.urls]
+Homepage = "https://github.com/kiyoka/concept-file"
+Repository = "https://github.com/kiyoka/concept-file"
+Issues = "https://github.com/kiyoka/concept-file/issues"
+
+[tool.setuptools.packages.find]
+where = ["python"]

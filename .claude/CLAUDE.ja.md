@@ -52,3 +52,78 @@
 | セットアップ不要で即使いたい | × | ◎ |
 
 **最も効果的な使い方**: concept-grepで関連ファイルを絞り込み → grepやReadで詳細を確認する2段階アプローチ
+
+## PyPI公開手順
+
+### 1. PyPIアカウント作成
+
+1. https://pypi.org/account/register/ でアカウントを作成
+2. メールアドレスの確認を完了する
+3. **2要素認証（2FA）を有効化する**（PyPIは2FA必須）
+   - https://pypi.org/manage/account/#two-factor にアクセス
+   - TOTPアプリ（Google Authenticator等）またはセキュリティキーを登録
+
+### 2. APIトークンの発行
+
+1. https://pypi.org/manage/account/token/ にアクセス
+2. トークン名: 例 `concept-file`
+3. スコープ: 初回は「Entire account」、パッケージ登録後は「Project: concept-file」に限定推奨
+4. 発行されたトークンを安全に保存する（`pypi-` で始まる文字列）
+
+### 3. TestPyPIでの事前テスト（推奨）
+
+TestPyPIはPyPIと同じ仕組みのテスト環境で、本番公開前の動作確認に使う。
+
+1. https://test.pypi.org/account/register/ で別途アカウントを作成
+2. APIトークンを発行する
+
+```bash
+# ビルド
+python -m build
+
+# TestPyPIにアップロード
+python -m twine upload --repository testpypi dist/*
+# ユーザー名: __token__
+# パスワード: pypi-で始まるAPIトークン
+
+# TestPyPIからインストールして動作確認
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ concept-file
+```
+
+### 4. 本番PyPIへの公開
+
+```bash
+# ビルド（dist/ をクリーンしてから）
+rm -rf dist/
+python -m build
+
+# アップロード
+python -m twine upload dist/*
+# ユーザー名: __token__
+# パスワード: pypi-で始まるAPIトークン
+```
+
+### 5. 公開後の確認
+
+```bash
+# PyPIからインストール
+pip install concept-file
+
+# 動作確認
+concept-grep --help
+concept-embed --help
+concept-show --help
+```
+
+### 6. バージョン更新時の公開手順
+
+1. `pyproject.toml` の `version` を更新する
+2. `rm -rf dist/ && python -m build`
+3. `python -m twine upload dist/*`
+
+### 現在の状態
+
+- **PyPI公開済み** — `pip install concept-file` でインストール可能
+- エントリーポイント: `concept-grep`, `concept-embed`, `concept-show`, `concept-sim`, `concept-plot`
+- ビルドに必要なパッケージ: `pip install build twine`
+
