@@ -1,0 +1,60 @@
+"""Calculate cosine similarity between .concept files."""
+
+import argparse
+import signal
+import sys
+from pathlib import Path
+
+from concept_file import read_concept
+from concept_file.search import cosine_similarity
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Calculate cosine similarity from a query .concept file to target files"
+    )
+    parser.add_argument("query", help="Query .concept file")
+    parser.add_argument("targets", nargs="+", help="Target .concept file(s)")
+    parser.add_argument("-s", "--score", action="store_true",
+                        help="Show similarity scores")
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="Minimum similarity score (default: 0.5)")
+    args = parser.parse_args()
+
+    try:
+        query_data = read_concept(args.query)
+    except (ValueError, FileNotFoundError) as e:
+        print(f"Error reading query file: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    query_vec = query_data.get("embedding", {}).get("vector")
+    if not query_vec:
+        print("Error: query file has no embedding", file=sys.stderr)
+        sys.exit(1)
+
+    results = []
+    for target_path in args.targets:
+        try:
+            target_data = read_concept(target_path)
+            target_vec = target_data.get("embedding", {}).get("vector")
+            if not target_vec:
+                print(f"Warning: {target_path} has no embedding, skipping", file=sys.stderr)
+                continue
+            sim = cosine_similarity(query_vec, target_vec)
+            results.append((sim, target_path, target_data.get("concept", "")))
+        except (ValueError, FileNotFoundError) as e:
+            print(f"Warning: {target_path}: {e}", file=sys.stderr)
+
+    results.sort(key=lambda x: x[0], reverse=True)
+
+    for sim, path, name in results:
+        if args.score:
+            print(f"{sim:.3f} (>{args.threshold:.2f})\t{name}\t{path}")
+        else:
+            print(f"{sim:.3f}\t{name}\t{path}")
+
+
+if __name__ == "__main__":
+    main()

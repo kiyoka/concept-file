@@ -1,0 +1,415 @@
+"""Semantic grep — find source files by meaning using .concept index."""
+
+import argparse
+import fnmatch
+import hashlib
+import math
+import os
+import signal
+import sys
+from pathlib import Path
+
+from concept_file import read_concept
+from concept_file.search import cosine_similarity
+
+# Handle SIGPIPE gracefully (e.g. when piped to head)
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+
+def find_git_root(start=None):
+    """Find .git/ directory by walking up from start (default: cwd)."""
+    p = Path(start) if start else Path.cwd()
+    p = p.resolve()
+    while True:
+        if (p / ".git").exists():
+            return p
+        if p.parent == p:
+            break
+        p = p.parent
+    return None
+
+
+def find_concept_root(start=None):
+    """Find .concept/ directory by walking up from start (default: cwd)."""
+    p = Path(start) if start else Path.cwd()
+    p = p.resolve()
+    while True:
+        candidate = p / ".concept"
+        if candidate.is_dir():
+            return candidate
+        if p.parent == p:
+            break
+        p = p.parent
+    return None
+
+
+def source_hash(path):
+    """Compute SHA-256 hash of a file's content."""
+    h = hashlib.sha256()
+    h.update(Path(path).read_bytes())
+    return "sha256:" + h.hexdigest()
+
+
+def source_to_concept_path(concept_root, source_path):
+    """Map a source file path to its .concept file path."""
+    if not concept_root:
+        return None
+    # source_path relative to the project root (parent of .concept/)
+    project_root = concept_root.parent
+    try:
+        rel = Path(source_path).resolve().relative_to(project_root)
+    except ValueError:
+        return None
+    return concept_root / (str(rel) + ".concept")
+
+
+def concept_to_source_path(concept_root, concept_path):
+    """Map a .concept file path back to its source file path."""
+    project_root = concept_root.parent
+    try:
+        rel = Path(concept_path).relative_to(concept_root)
+    except ValueError:
+        return None
+    # Remove .concept suffix
+    source_rel = str(rel)
+    if source_rel.endswith(".concept"):
+        source_rel = source_rel[: -len(".concept")]
+    return project_root / source_rel
+
+
+def file_matches_filters(filepath, include_patterns, exclude_patterns):
+    """Check if a file matches include/exclude filters."""
+    name = str(filepath)
+    if exclude_patterns:
+        for pat in exclude_patterns:
+            if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(filepath.name, pat):
+                return False
+    if include_patterns:
+        for pat in include_patterns:
+            if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(filepath.name, pat):
+                return True
+        return False
+    return True
+
+
+def collect_source_files(paths, recursive, include_patterns=None, exclude_patterns=None):
+    """Collect source file paths from arguments, expanding directories if recursive."""
+    SKIP_DIRS = {".git", ".concept", ".venv", "__pycache__", "node_modules"}
+
+    def walk_recursive(directory):
+        """Walk directory tree, skipping hidden and common non-source directories."""
+        result = []
+        for entry in sorted(directory.iterdir()):
+            if entry.name.startswith(".") or entry.name in SKIP_DIRS:
+                continue
+            if entry.is_file():
+                if file_matches_filters(entry, include_patterns, exclude_patterns):
+                    result.append(entry)
+            elif entry.is_dir():
+                result.extend(walk_recursive(entry))
+        return result
+
+    files = []
+    for p in paths:
+        path = Path(p)
+        if path.is_file():
+            if file_matches_filters(path, include_patterns, exclude_patterns):
+                files.append(path)
+        elif path.is_dir():
+            if recursive:
+                files.extend(walk_recursive(path))
+            else:
+                print(
+                    f"concept-grep: {p}: Is a directory (use -r to recurse)",
+                    file=sys.stderr,
+                )
+    return files
+
+
+STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
+    "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
+    "being", "have", "has", "had", "do", "does", "did", "will", "would",
+    "could", "should", "may", "might", "can", "shall", "not", "no", "nor",
+    "so", "if", "then", "than", "that", "this", "these", "those", "it",
+    "its", "how", "what", "when", "where", "which", "who", "whom", "why",
+}
+
+
+def extract_keywords(query):
+    """Extract keywords from query, removing stop words."""
+    import re
+    words = re.split(r'\s+', query.strip().lower())
+    return [w for w in words if w and w not in STOP_WORDS]
+
+
+def keyword_score(filepath, keywords):
+    """Compute keyword hit ratio for a file (0.0 to 1.0)."""
+    if not keywords:
+        return 0.0
+    try:
+        text = Path(filepath).read_text(errors="replace").lower()
+    except (OSError, UnicodeDecodeError):
+        return 0.0
+    hits = sum(1 for kw in keywords if kw in text)
+    return hits / len(keywords)
+
+
+def embed_query(text, model, api_base=None):
+    """Generate embedding for query text."""
+    import openai
+
+    kwargs = {}
+    if api_base:
+        kwargs["base_url"] = api_base
+        kwargs["api_key"] = "lm-studio"
+    client = openai.OpenAI(**kwargs)
+    response = client.embeddings.create(input=text, model=model)
+    return response.data[0].embedding
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Semantic grep — find source files by meaning"
+    )
+    parser.add_argument("query", nargs="?", help="Search query text (not required with --index)")
+    parser.add_argument("paths", nargs="*", help="Files or directories to search")
+    parser.add_argument("-r", "--recursive", action="store_true",
+                        help="Recurse into directories")
+    parser.add_argument("-s", "--score", action="store_true",
+                        help="Show similarity scores")
+    parser.add_argument("-g", "--graph", action="store_true",
+                        help="Show similarity as a bar graph")
+    parser.add_argument("-v", "--invert-match", action="store_true",
+                        help="Show least similar files (invert match)")
+    parser.add_argument("-n", "--top", type=int, default=0,
+                        help="Show only top N results (default: all)")
+    parser.add_argument("-p", "--top-percent", type=float, default=10,
+                        help="Show top N%% of results by similarity (default: 10)")
+    parser.add_argument("--model",
+                        default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
+                        help="Embedding model (env: CONCEPT_EMBED_MODEL)")
+    parser.add_argument("--api-base",
+                        default=os.environ.get("CONCEPT_API_BASE"),
+                        help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
+    parser.add_argument("--index", action="store_true",
+                        help="Generate .concept files for the specified source files")
+    parser.add_argument("--keyword-weight", type=float, default=0.3,
+                        help="Weight for keyword score in hybrid search (default: 0.3)")
+    parser.add_argument("--summary", nargs="?", type=int, const=5, default=None, metavar="LINES",
+                        help="Show embed_source summary for each result (default: 5 lines)")
+    parser.add_argument("--include", action="append", default=[], metavar="GLOB",
+                        help="Only include files matching glob pattern (can be repeated)")
+    parser.add_argument("--exclude", action="append", default=[], metavar="GLOB",
+                        help="Exclude files matching glob pattern (can be repeated)")
+    parser.add_argument("--force", action="store_true",
+                        help="Force creating .concept/ in current directory even without .git")
+    args = parser.parse_args()
+
+    concept_root = find_concept_root()
+
+    # --index mode: generate .concept files
+    if args.index:
+        # In index mode, query is not needed — treat it as part of paths
+        index_paths = []
+        if args.query:
+            index_paths.append(args.query)
+        index_paths.extend(args.paths)
+        if not index_paths:
+            index_paths = ["."]
+
+        if not concept_root:
+            git_root = find_git_root()
+            if git_root:
+                concept_root = git_root / ".concept"
+            elif args.force:
+                concept_root = Path.cwd() / ".concept"
+            else:
+                cwd = Path.cwd().resolve()
+                print(f"Error: .git not found (searched from {cwd} to /). "
+                      "Use --force to create .concept in the current directory.",
+                      file=sys.stderr)
+                sys.exit(1)
+            concept_root.mkdir(exist_ok=True)
+
+        print(f"Using: {concept_root.resolve()}", file=sys.stderr)
+
+        source_files = collect_source_files(index_paths, args.recursive,
+                                           args.include or None, args.exclude or None)
+        if not source_files:
+            print("No source files found.", file=sys.stderr)
+            sys.exit(1)
+
+        from concept_file import read_concept as read_existing, write_concept
+        from datetime import datetime, timezone
+
+        count = 0
+        skipped = 0
+        for sf in source_files:
+            concept_path = source_to_concept_path(concept_root, sf)
+            if not concept_path:
+                continue
+            # Check hash to skip unchanged files
+            current_hash = source_hash(sf)
+            if concept_path.exists():
+                try:
+                    existing = read_existing(str(concept_path))
+                    existing_hash = existing.get("provenance", {}).get("source_hash")
+                    existing_model = existing.get("embedding", {}).get("model")
+                    if existing_hash == current_hash and existing_model == args.model:
+                        skipped += 1
+                        print(f"Skipped (unchanged): {sf}", file=sys.stderr)
+                        continue
+                    if existing_hash == current_hash and existing_model != args.model:
+                        print(f"Re-indexing (model changed: {existing_model} -> {args.model}): {sf}", file=sys.stderr)
+                except (ValueError, FileNotFoundError):
+                    pass
+            concept_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                text = sf.read_text(errors="replace")
+                if not text.strip():
+                    continue
+                from concept_file.summarizer import summarize
+                embed_source, used_summarizer = summarize(str(sf), text)
+                vector = embed_query(embed_source, args.model, api_base=args.api_base)
+                filename_vec = embed_query(sf.name, args.model, api_base=args.api_base)
+                fn_sim = cosine_similarity(vector, filename_vec)
+                data = {
+                    "concept": sf.name,
+                    "version": "1.0",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "text": text,
+                    "embed_source": embed_source if used_summarizer else None,
+                    "embedding": {
+                        "model": args.model,
+                        "dim": len(vector),
+                        "vector": vector,
+                    },
+                    "filename_similarity": round(fn_sim, 4),
+                    "provenance": {
+                        "source_file": str(sf),
+                        "source_hash": current_hash,
+                        "pipeline": "concept-grep --index",
+                    },
+                }
+                write_concept(str(concept_path), data)
+                count += 1
+                print(f"Indexed: {sf} (filename_similarity: {fn_sim:.4f})", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: {sf}: {e}", file=sys.stderr)
+        print(f"Indexed {count} files. (skipped {skipped} unchanged)", file=sys.stderr)
+        return
+
+    # Search mode
+    if not args.query:
+        print("Error: query text is required for search mode.", file=sys.stderr)
+        sys.exit(1)
+
+    search_paths = args.paths if args.paths else ["."]
+    source_files = collect_source_files(search_paths, args.recursive,
+                                       args.include or None, args.exclude or None)
+    if not source_files:
+        print("No source files found.", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        query_vec = embed_query(args.query, args.model, api_base=args.api_base)
+    except Exception as e:
+        print(f"Error generating query embedding: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    keywords = extract_keywords(args.query)
+
+    # Collect semantic scores for all source files with .concept files
+    semantic_results = {}
+    summaries = {}
+    for sf in source_files:
+        concept_path = source_to_concept_path(concept_root, sf)
+        if not concept_path or not concept_path.exists():
+            # Fallback: check for .concept file alongside the source file
+            fallback = Path(str(sf) + ".concept")
+            if fallback.exists():
+                concept_path = fallback
+            else:
+                continue
+        try:
+            data = read_concept(str(concept_path))
+            file_model = data.get("embedding", {}).get("model")
+            if file_model and file_model != args.model:
+                print(f"Error: model mismatch: {concept_path} was embedded with '{file_model}' "
+                      f"but current model is '{args.model}'. "
+                      f"Re-run 'concept-grep --index' to re-embed.",
+                      file=sys.stderr)
+                sys.exit(1)
+            target_vec = data.get("embedding", {}).get("vector")
+            if not target_vec:
+                continue
+            sim = cosine_similarity(query_vec, target_vec)
+            semantic_results[str(sf)] = (sim, sf)
+            if args.summary is not None:
+                embed_source = data.get("embed_source") or data.get("text")
+                if embed_source:
+                    summaries[str(sf)] = embed_source
+        except (ValueError, FileNotFoundError) as e:
+            print(f"Warning: {concept_path}: {e}", file=sys.stderr)
+
+    # Also find files matching keywords that may not be in semantic results
+    for sf in source_files:
+        sf_key = str(sf)
+        if sf_key not in semantic_results:
+            kw_sc = keyword_score(sf, keywords)
+            if kw_sc > 0:
+                semantic_results[sf_key] = (0.0, sf)
+
+    # Compute final scores (hybrid: semantic + keyword)
+    all_results = []
+    kw_weight = args.keyword_weight
+    sem_weight = 1.0 - kw_weight
+    for sf_key, (sem_sim, sf) in semantic_results.items():
+        kw_sc = keyword_score(sf, keywords)
+        final_score = sem_sim * sem_weight + kw_sc * kw_weight
+        all_results.append((final_score, sf))
+
+    # Sort by score: descending for normal, ascending for invert
+    if args.invert_match:
+        all_results.sort(key=lambda x: x[0])
+    else:
+        all_results.sort(key=lambda x: x[0], reverse=True)
+
+    # Apply top N or top percentage
+    if args.top > 0:
+        results = all_results[: args.top]
+    else:
+        count = max(1, math.ceil(len(all_results) * args.top_percent / 100))
+        results = all_results[: count]
+
+    if args.graph and results:
+        sims = [s for s, _ in results]
+        min_sim, max_sim = min(sims), max(sims)
+        sim_range = max_sim - min_sim
+
+    summary_lines = args.summary if args.summary is not None else 0
+
+    for sim, sf in results:
+        if args.graph:
+            if sim_range == 0:
+                bar_width = 10
+            else:
+                bar_width = max(1, round((sim - min_sim) / sim_range * 10))
+            bar = "\u2588" * bar_width
+            print(f"{bar:<10}({sim:.2f})\t{sf}")
+        elif args.score:
+            print(f"{sim:.3f}\t{sf}")
+        else:
+            print(sf)
+        if summary_lines > 0 and str(sf) in summaries:
+            all_lines = summaries[str(sf)].split("\n")
+            for line in all_lines[:summary_lines]:
+                print(f"  {line}")
+            if len(all_lines) > summary_lines:
+                print(f"  ...")
+            print()
+
+
+if __name__ == "__main__":
+    main()

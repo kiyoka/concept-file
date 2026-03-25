@@ -1,0 +1,140 @@
+"""Display the contents of a .concept file in human-readable form."""
+
+import argparse
+import signal
+import sys
+from pathlib import Path
+
+from concept_file import read_concept
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+
+def find_concept_root(start=None):
+    """Find .concept/ directory by walking up from start (default: cwd)."""
+    p = Path(start) if start else Path.cwd()
+    p = p.resolve()
+    while True:
+        candidate = p / ".concept"
+        if candidate.is_dir():
+            return candidate
+        if p.parent == p:
+            break
+        p = p.parent
+    return None
+
+
+def resolve_concept_file(filepath):
+    """Resolve a file path to its .concept file.
+
+    If the file is already a .concept file, return it as-is.
+    Otherwise, look for the corresponding .concept file:
+    1. .concept/ directory (centralized index)
+    2. Same directory as source file (fallback)
+    """
+    p = Path(filepath)
+
+    # Try reading as .concept file first
+    try:
+        read_concept(str(p))
+        return p
+    except (ValueError, FileNotFoundError):
+        pass
+
+    # Not a .concept file — look for corresponding .concept file
+    # 1. Check .concept/ directory
+    concept_root = find_concept_root(p.parent)
+    if concept_root:
+        project_root = concept_root.parent
+        try:
+            rel = p.resolve().relative_to(project_root)
+            candidate = concept_root / (str(rel) + ".concept")
+            if candidate.exists():
+                return candidate
+        except ValueError:
+            pass
+
+    # 2. Check same directory (fallback)
+    fallback = Path(str(p) + ".concept")
+    if fallback.exists():
+        return fallback
+
+    return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Show contents of a .concept file")
+    parser.add_argument("file", help="Path to .concept file or source file")
+    parser.add_argument("--json", action="store_true", help="Output raw JSON")
+    parser.add_argument("-s", "--summary", action="store_true",
+                        help="Show only embed_source summary (omit full text)")
+    args = parser.parse_args()
+
+    concept_file = resolve_concept_file(args.file)
+    if not concept_file:
+        print(f"Error: No .concept file found for '{args.file}'", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        data = read_concept(str(concept_file))
+    except (ValueError, FileNotFoundError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.json:
+        import json
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return
+
+    print(f"Concept:  {data.get('concept', '(unnamed)')}")
+    print(f"Version:  {data.get('version', '?')}")
+    print(f"Created:  {data.get('created_at', '?')}")
+
+    if "language" in data:
+        print(f"Language: {data['language']}")
+
+    if "keywords" in data:
+        print(f"Keywords: {', '.join(data['keywords'])}")
+
+    if "summary" in data:
+        print(f"Summary:  {data['summary']}")
+
+    if "embedding" in data:
+        emb = data["embedding"]
+        dim = emb.get("dim", len(emb.get("vector", [])))
+        model = emb.get("model", "?")
+        print(f"Embedding: {dim}-dim ({model})")
+
+    if "provenance" in data:
+        prov = data["provenance"]
+        if "source_url" in prov:
+            print(f"Source:   {prov['source_url']}")
+        if "pipeline" in prov:
+            print(f"Pipeline: {prov['pipeline']}")
+        if "llm_model" in prov:
+            print(f"LLM:      {prov['llm_model']}")
+
+    if "relations" in data:
+        print("Relations:")
+        for rel in data["relations"]:
+            print(f"  {rel['type']:>10} -> {rel['ref']}")
+
+    embed_source = data.get("embed_source")
+    if "embed_source" in data:
+        if embed_source is None:
+            # Reconstruct from concept name + text
+            embed_source = data.get("concept", "") + "\n" + data.get("text", "")
+        print()
+        print("--- Embed Source ---")
+        print(embed_source)
+
+    if not args.summary:
+        text = data.get("text", "")
+        if text:
+            print()
+            print("--- Text ---")
+            print(text)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,101 @@
+"""Generate a .concept file from text using an embedding API."""
+
+import argparse
+import json
+import os
+import signal
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+from concept_file import write_concept
+
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+
+def embed_openai(text, model, api_base=None):
+    """Generate embedding using OpenAI-compatible API."""
+    import openai
+    kwargs = {}
+    if api_base:
+        kwargs["base_url"] = api_base
+        kwargs["api_key"] = "lm-studio"
+    client = openai.OpenAI(**kwargs)
+    response = client.embeddings.create(input=text, model=model)
+    return response.data[0].embedding
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate a .concept file from text")
+    parser.add_argument("--name", required=True, help="Concept name")
+    parser.add_argument("--text", help="Text content (reads stdin if omitted)")
+    parser.add_argument("--output", "-o", required=True, help="Output .concept file path")
+    parser.add_argument("--model",
+                        default=os.environ.get("CONCEPT_EMBED_MODEL", "text-embedding-3-small"),
+                        help="Embedding model (env: CONCEPT_EMBED_MODEL, default: text-embedding-3-small)")
+    parser.add_argument("--language", help="BCP 47 language tag")
+    parser.add_argument("--keywords", nargs="*", help="Keywords")
+    parser.add_argument("--source-file", help="Source file path (enables tree-sitter summarization for supported languages)")
+    parser.add_argument("--source-url", help="Source URL for provenance")
+    parser.add_argument("--api-base",
+                        default=os.environ.get("CONCEPT_API_BASE"),
+                        help="OpenAI-compatible API base URL (env: CONCEPT_API_BASE)")
+    parser.add_argument("--no-embed", action="store_true",
+                        help="Skip embedding generation")
+    args = parser.parse_args()
+
+    text = args.text if args.text else sys.stdin.read()
+    if not text.strip():
+        print("Error: empty text", file=sys.stderr)
+        sys.exit(1)
+
+    data = {
+        "concept": args.name,
+        "version": "1.0",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "text": text,
+    }
+
+    if args.language:
+        data["language"] = args.language
+    if args.keywords:
+        data["keywords"] = args.keywords
+
+    # Generate embed_source using tree-sitter if source file is specified
+    embed_source = None
+    if args.source_file:
+        from concept_file.summarizer import summarize
+        source_text = Path(args.source_file).read_text(encoding="utf-8")
+        embed_source, used_summarizer = summarize(args.source_file, source_text)
+        if used_summarizer:
+            data["embed_source"] = embed_source
+        else:
+            data["embed_source"] = None
+
+    if not args.no_embed:
+        embed_text = embed_source if embed_source else text
+        try:
+            vector = embed_openai(embed_text, args.model, api_base=args.api_base)
+            data["embedding"] = {
+                "model": args.model,
+                "dim": len(vector),
+                "vector": vector,
+            }
+        except Exception as e:
+            print(f"Error generating embedding: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    provenance = {}
+    if args.source_url:
+        provenance["source_url"] = args.source_url
+    if not args.no_embed:
+        provenance["pipeline"] = "embed"
+    if provenance:
+        data["provenance"] = provenance
+
+    write_concept(args.output, data)
+    print(f"Written: {args.output}")
+
+
+if __name__ == "__main__":
+    main()
