@@ -123,8 +123,7 @@ concept-show --help
 
 ### 現在の状態
 
-- `pyproject.toml` を作成済み（v0.1.0）
-- `python/concept_file/cli/` にCLIモジュールを配置済み
-- `pip install .` でローカルインストール可能
+- **PyPI公開済み** — `pip install concept-file` でインストール可能
 - エントリーポイント: `concept-grep`, `concept-embed`, `concept-show`, `concept-sim`, `concept-plot`
-- 必要な追加パッケージ: `pip install build twine`
+- ビルドに必要なパッケージ: `pip install build twine`
+
