@@ -10,7 +10,7 @@ from pathlib import Path
 signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 # Use a per-process numba cache directory to avoid lock conflicts in parallel execution
-os.environ["NUMBA_CACHE_DIR"] = os.path.join(tempfile.gettempdir(), f"numba_cache_{os.getpid()}")
+os.environ["NUMBA_CACHE_DIR"] = tempfile.mkdtemp(prefix="numba_cache_")
 
 import numpy as np
 import umap
@@ -112,9 +112,10 @@ def main():
     coords = reducer.fit_transform(embeddings)
 
     # Build hover text: concept name + truncated text
+    import html
     hover_texts = []
     for name, text, fp in zip(names, texts, file_paths):
-        hover = f"<b>{name}</b><br>{fp}<br><br>{text}"
+        hover = f"<b>{html.escape(name)}</b><br>{html.escape(fp)}<br><br>{html.escape(text)}"
         hover_texts.append(hover)
 
     # Compute colors from UMAP coordinates so nearby points share similar colors.

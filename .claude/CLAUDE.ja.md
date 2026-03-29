@@ -127,3 +127,4 @@ concept-show --help
 - エントリーポイント: `concept-grep`, `concept-embed`, `concept-show`, `concept-sim`, `concept-plot`
 - ビルドに必要なパッケージ: `pip install build twine`
 
+
